@@ -22,7 +22,11 @@ const exo2 = Exo_2({
 export const metadata: Metadata = {
   title: "OrientaJovem",
   description: "",
+    icons: {
+    icon: "/OJ.svg",
+  },
 };
+
 
 export default function RootLayout({
   children,

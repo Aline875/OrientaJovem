@@ -11,7 +11,7 @@ export default function Login() {
       <main className="flex flex-col md:flex-row w-full h-full min-h-screen">
         
         <div className="w-full md:w-1/2 bg-[#E8E8E7] flex items-center justify-center p-10">
-          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-[#D9D9D9] to-[#5E52FF] bg-clip-text text-transparent text-center">
+          <h1 className="text-4xl font-semibold bg-gradient-to-r from-[#D9D9D9] to-[#5E52FF] bg-clip-text text-transparent text-center ">
             OrientaJovem
           </h1>
         </div>
