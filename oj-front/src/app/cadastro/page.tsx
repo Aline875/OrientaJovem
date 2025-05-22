@@ -1,8 +1,8 @@
 "use client";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";  
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";      
+import Link from "next/link";
 
 export default function Cadastro() {
   return (
@@ -39,7 +39,10 @@ export default function Cadastro() {
               />
             </div>
             <div className="w-full">
-              <Label htmlFor="password" className="block mb-1 text-sm font-medium">
+              <Label
+                htmlFor="password"
+                className="block mb-1 text-sm font-medium"
+              >
                 Senha
               </Label>
               <Input
@@ -50,7 +53,10 @@ export default function Cadastro() {
               />
             </div>
             <div className="w-full">
-              <Label htmlFor="confirmar-senha" className="block mb-1 text-sm font-medium">
+              <Label
+                htmlFor="confirmar-senha"
+                className="block mb-1 text-sm font-medium"
+              >
                 Confirmar senha
               </Label>
               <Input
