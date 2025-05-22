@@ -37,7 +37,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${exo2.variable} font-[var(--font-exo2)] antialiased bg-gradient-to-t from-[#1A5579] to-[#2A2570] min-h-screen`}
       >
-        <link href="../../manifest.json" />
+        <link rel="manifest" href="/manifest.json"/>
         {children}
       </body>
     </html>
