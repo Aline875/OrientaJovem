@@ -1,0 +1,26 @@
+{
+  "name": "OrientaJovem",
+  "short_name": "OrientaJovem",
+  "start_url": "/",
+  "display": "standalone",
+  "description": "A description for your application",
+  "lang": " pt-br",
+  "dir": "auto",
+  "theme_color": "#000000",
+  "background_color": "#000000",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "https://www.pwabuilder.com/assets/icons/icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "https://www.pwabuilder.com/assets/icons/icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
