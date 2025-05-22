@@ -4,6 +4,10 @@ import {
   SidebarGroup,
   SidebarHeader,
   SidebarProvider,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarGroupContent,
 } from "@/components/ui/sidebar";
 import {
   Sheet,
@@ -15,6 +19,7 @@ import {
 } from "@/components/ui/sheet";
 import { useState } from "react";
 import { LayoutDashboard, User, Folder, BarChart } from "lucide-react";
+import Link from "next/link";
 
 export default function AppSidebar() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -28,21 +33,28 @@ export default function AppSidebar() {
 
   return (
     <div className="relative ">
-      <div className="hidden lg:flex fixed top-16 left-0 h-[calc(100vh-4rem)] min-w-max bg-[#323536] text-white z-40">
-        <SidebarProvider className="bg-[#323536] text-white">
-          <Sidebar className="h-full bg-[#323536] text-white">
-            <SidebarContent className="bg-[#323536] text-white">
-              <SidebarGroup className="space-y-2 px-2 mt-20">
-                {links.map(({ href, label, icon: Icon }) => (
-                  <a
-                    key={href}
-                    href={href}
-                    className="flex items-center gap-1 text-sm hover:underline px-2 py-1"
-                  >
-                    <Icon className="w-4 h-4" />
-                    {label}
-                  </a>
-                ))}
+     <div className="hidden lg:block">
+        <SidebarProvider>
+          <Sidebar className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white/10 backdrop-blur-md border-r border-white/20">
+            <SidebarHeader className="p-4">
+              <h2 className="text-lg font-semibold text-white">Menu</h2>
+            </SidebarHeader>
+            <SidebarContent>
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {links.map(({ href, label, icon: Icon }) => (
+                      <SidebarMenuItem key={href}>
+                        <SidebarMenuButton asChild>
+                          <Link href={href} className="flex items-center gap-3 text-white hover:bg-white/20 rounded-md p-2">
+                            <Icon size={20} />
+                            {label}
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
               </SidebarGroup>
             </SidebarContent>
           </Sidebar>
