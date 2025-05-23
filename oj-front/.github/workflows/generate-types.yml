@@ -3,23 +3,33 @@ name: "generate-types"
 on:
   push:
     branches:
-      - main
+      - feat-jovemPage
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
       - name: Log inicial
         run: echo "Workflow iniciado com sucesso 🎉"
-
-      - uses: supabase/setup-cli@v1
+      
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
         with:
           version: latest
-
-      - run: supabase init
-      - run: supabase db start
-
-      - name: Verificar tipos gerados
+      
+      - name: Inicializar Supabase
+        run: supabase init
+      
+      - name: Iniciar banco local
+        run: supabase db start
+      
+      - name: Gerar e verificar tipos
         run: |
           supabase gen types typescript --local > schema.gen.ts
           if ! git diff --ignore-space-at-eol --exit-code --quiet schema.gen.ts; then
