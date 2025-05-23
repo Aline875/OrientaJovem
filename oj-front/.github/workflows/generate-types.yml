@@ -20,17 +20,22 @@ jobs:
           cache: 'npm'
       
       - name: Instalar dependências
-        run: npm ci
+        run: npm install
       
       - name: Build do projeto Next.js
         run: npm run build
+        env:
+          NODE_ENV: production
       
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: nextjs-build
-          path: .next/
-          retention-days: 5
+      - name: Verificar se build foi criado
+        run: |
+          if [ -d ".next" ]; then
+            echo "✅ Pasta .next criada com sucesso!"
+            ls -la .next/
+          else
+            echo "❌ Erro: Pasta .next não foi criada"
+            exit 1
+          fi
       
       - name: Build concluído
-        run: echo "✅ Build do Next.js finalizado!"
+        run: echo "🚀 Build do Next.js finalizado com sucesso!"
