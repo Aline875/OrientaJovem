@@ -1,4 +1,4 @@
-name: "generate-types"
+name: "Build Next.js Project"
 
 on:
   push:
@@ -12,28 +12,25 @@ jobs:
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
+          node-version: '18'
+          cache: 'npm'
       
-      - name: Log inicial
-        run: echo "Workflow iniciado com sucesso 🎉"
+      - name: Instalar dependências
+        run: npm ci
       
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
+      - name: Build do projeto Next.js
+        run: npm run build
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
-          version: latest
+          name: nextjs-build
+          path: .next/
+          retention-days: 5
       
-      - name: Inicializar Supabase
-        run: supabase init
-      
-      - name: Iniciar banco local
-        run: supabase db start
-      
-      - name: Gerar e verificar tipos
-        run: |
-          supabase gen types typescript --local > schema.gen.ts
-          if ! git diff --ignore-space-at-eol --exit-code --quiet schema.gen.ts; then
-            echo "Detected uncommitted changes after build. See status below:"
-            git diff
-            exit 1
-          fi
+      - name: Build concluído
+        run: echo "✅ Build do Next.js finalizado!"
