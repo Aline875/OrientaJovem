@@ -6,6 +6,14 @@ import Header from "@/components/Header";
 import AppSidebar from "@/components/Sidebar";
 import { FaLinkedin, FaGithub } from "react-icons/fa";
 
+type DadosUsuario = {
+  nome?: string;
+  nome_empresa?: string;
+  id_projeto?: string;
+  email?: string;
+  cpf?: string;
+};
+
 export default function PerfilJovem() {
   const { usuario, carregando, erro } = useDadosUsuario();
 
@@ -20,7 +28,11 @@ export default function PerfilJovem() {
       <p className="text-center mt-10 text-yellow-600">Usuário inválido.</p>
     );
 
-  const dados = usuario.dados;
+  const dados = usuario.dados as DadosUsuario;
+
+  function obterNome(dados: DadosUsuario) {
+    return "nome" in dados ? dados.nome : dados.nome_empresa;
+  }
 
   return (
     <>
@@ -33,11 +45,13 @@ export default function PerfilJovem() {
               <Card className="rounded-3xl bg-[#64748b]/30 backdrop-blur-md p-6 text-white shadow-lg">
                 <div className="flex flex-col md:flex-row items-center gap-6">
                   <div className="w-32 h-32 rounded-full border-4 border-white flex items-center justify-center text-4xl font-bold bg-white text-gray-800">
-                    {dados.nome?.charAt(0).toUpperCase() || "?"}
+                    {obterNome(dados)?.charAt(0).toUpperCase() || "?"}
                   </div>
+
                   <div className="space-y-2">
                     <p className="text-lg">
-                      <span className="font-semibold">Nome</span> - {dados.nome}
+                      <span className="font-semibold">Nome</span> -{" "}
+                      {obterNome(dados)}
                     </p>
                     <p className="text-lg">
                       <span className="font-semibold">Tutor</span> - Miguel

@@ -1,4 +1,3 @@
-// hooks/useUser.ts
 "use client";
 
 import { useEffect, useState } from "react";
@@ -12,7 +11,7 @@ export function useUser() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
+      const { data } = await supabase.auth.getUser();
       if (data?.user) setUser(data.user);
       setLoading(false);
     };

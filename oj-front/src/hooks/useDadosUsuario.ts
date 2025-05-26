@@ -1,4 +1,3 @@
-// hooks/useDadosUsuario.ts
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -37,16 +36,16 @@ interface SessaoUsuario {
   tipo: TipoUsuario;
   timestamp: number;
 }
+const CACHE_DURACAO = 5 * 60 * 1000;
 
 export function useDadosUsuario() {
   const [usuario, setUsuario] = useState<DadosUsuario | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  const CACHE_DURACAO = 5 * 60 * 1000;
   const supabase = createClientComponentClient();
 
-  const lerCacheLocal = () => {
+  const lerCacheLocal = useCallback(() => {
     try {
       const cacheString = localStorage.getItem("cache_usuario_dados");
       if (!cacheString) return null;
@@ -64,14 +63,14 @@ export function useDadosUsuario() {
       localStorage.removeItem("cache_usuario_dados");
       return null;
     }
-  };
+  }, []);
 
-  const salvarCacheLocal = (dados: DadosUsuario) => {
+  const salvarCacheLocal = useCallback((dados: DadosUsuario) => {
     localStorage.setItem(
       "cache_usuario_dados",
       JSON.stringify({ usuario: dados, timestamp: Date.now() })
     );
-  };
+  }, []);
 
   const buscarDadosUsuario = useCallback(async () => {
     try {
@@ -97,33 +96,37 @@ export function useDadosUsuario() {
       let dadosUsuario: DadosUsuario;
 
       if (sessao.tipo === "jovem") {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("jovem")
           .select("*")
           .eq("id_jovem", sessao.id)
           .single();
-        if (error || !data) throw new Error("Erro ao buscar dados do jovem.");
 
+        if (!data) throw new Error("Erro ao buscar dados do jovem.");
         dadosUsuario = { tipo: "jovem", dados: data };
       } else {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("empresa")
           .select("*")
           .eq("id_empresa", sessao.id)
           .single();
-        if (error || !data) throw new Error("Erro ao buscar dados da empresa.");
 
+        if (!data) throw new Error("Erro ao buscar dados da empresa.");
         dadosUsuario = { tipo: "empresa", dados: data };
       }
 
       setUsuario(dadosUsuario);
       salvarCacheLocal(dadosUsuario);
-    } catch (err: any) {
-      setErro(err.message || "Erro desconhecido.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setErro(err.message);
+      } else {
+        setErro("Erro desconhecido.");
+      }
     } finally {
       setCarregando(false);
     }
-  }, [supabase]);
+  }, [supabase, lerCacheLocal, salvarCacheLocal]);
 
   useEffect(() => {
     buscarDadosUsuario();

@@ -39,6 +39,48 @@ interface SessaoUsuario {
   timestamp: number;
 }
 
+// Função para validar se objeto é UsuarioJovem
+function isUsuarioJovem(obj: unknown): obj is UsuarioJovem {
+  if (
+    typeof obj === "object" &&
+    obj !== null &&
+    "id_jovem" in obj &&
+    "login" in obj &&
+    "cpf" in obj &&
+    "nome" in obj &&
+    "email" in obj
+  ) {
+    const o = obj as { [key: string]: unknown };
+    return (
+      typeof o.id_jovem === "number" &&
+      typeof o.login === "string" &&
+      typeof o.cpf === "number" &&
+      typeof o.nome === "string" &&
+      typeof o.email === "string"
+    );
+  }
+  return false;
+}
+
+// Função para validar se objeto é UsuarioEmpresa
+function isUsuarioEmpresa(obj: unknown): obj is UsuarioEmpresa {
+  if (
+    typeof obj === "object" &&
+    obj !== null &&
+    "id_empresa" in obj &&
+    "nome_empresa" in obj &&
+    "email" in obj
+  ) {
+    const o = obj as { [key: string]: unknown };
+    return (
+      typeof o.id_empresa === "number" &&
+      typeof o.nome_empresa === "string" &&
+      typeof o.email === "string"
+    );
+  }
+  return false;
+}
+
 export default function Home() {
   const [usuario, setUsuario] = useState<DadosUsuario | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -48,12 +90,13 @@ export default function Home() {
   const supabase = createClientComponentClient();
   const router = useRouter();
 
-  const CACHE_DURACAO = 5 * 60 * 1000;
+  // ... (tudo acima permanece igual até...)
 
   const precisaAtualizar = useCallback(() => {
-    return Date.now() - ultimaAtualizacao > CACHE_DURACAO;
-  }, [ultimaAtualizacao]);
+    return Date.now() - ultimaAtualizacao > 5 * 60 * 1000; // CACHE_DURACAO
+  }, [ultimaAtualizacao]); // removido CACHE_DURACAO
 
+  // ...
   const salvarCacheLocal = useCallback((dadosUsuario: DadosUsuario) => {
     localStorage.setItem(
       "cache_usuario_dados",
@@ -69,20 +112,27 @@ export default function Home() {
       const cacheString = localStorage.getItem("cache_usuario_dados");
       if (!cacheString) return null;
 
-      const cache = JSON.parse(cacheString);
+      const cache: { usuario: unknown; timestamp: number } =
+        JSON.parse(cacheString);
       const agora = Date.now();
 
-      if (agora - cache.timestamp > CACHE_DURACAO) {
+      if (agora - cache.timestamp > 5 * 60 * 1000) {
         localStorage.removeItem("cache_usuario_dados");
         return null;
       }
 
-      return cache.usuario;
+      if (isUsuarioJovem(cache.usuario) || isUsuarioEmpresa(cache.usuario)) {
+        return cache.usuario as unknown as DadosUsuario;
+      }
+
+      return null;
     } catch {
       localStorage.removeItem("cache_usuario_dados");
       return null;
     }
-  }, []);
+  }, []); // removido CACHE_DURACAO das dependências
+
+  // ...
 
   const buscarDadosUsuario = useCallback(
     async (forcarAtualizacao = false) => {
@@ -123,7 +173,11 @@ export default function Home() {
 
           if (error || !data) throw new Error("Erro ao buscar dados do jovem.");
 
-          const dadosUsuario = { tipo: "jovem", dados: data };
+          if (!isUsuarioJovem(data)) {
+            throw new Error("Dados do jovem estão em formato inválido.");
+          }
+
+          const dadosUsuario: DadosUsuario = { tipo: "jovem", dados: data };
           setUsuario(dadosUsuario);
           salvarCacheLocal(dadosUsuario);
         } else if (sessao.tipo === "empresa") {
@@ -136,7 +190,11 @@ export default function Home() {
           if (error || !data)
             throw new Error("Erro ao buscar dados da empresa.");
 
-          const dadosUsuario = { tipo: "empresa", dados: data };
+          if (!isUsuarioEmpresa(data)) {
+            throw new Error("Dados da empresa estão em formato inválido.");
+          }
+
+          const dadosUsuario: DadosUsuario = { tipo: "empresa", dados: data };
           setUsuario(dadosUsuario);
           salvarCacheLocal(dadosUsuario);
         }
@@ -151,7 +209,7 @@ export default function Home() {
         setCarregando(false);
       }
     },
-    [supabase, lerCacheLocal, salvarCacheLocal]
+    [supabase, lerCacheLocal, salvarCacheLocal] // removido CACHE_DURACAO
   );
 
   useEffect(() => {
@@ -260,83 +318,49 @@ export default function Home() {
                 : erro
                   ? "❌ Erro ao carregar dados"
                   : usuario
-                    ? `👋 Olá, ${usuario.tipo === "jovem" ? ((usuario.dados as UsuarioJovem).nome ?? "Usuário") : ((usuario.dados as UsuarioEmpresa).nome_empresa ?? "Empresa")}!`
-                    : "🏠 Página Inicial"}
+                    ? `👋 Olá, ${
+                        usuario.tipo === "jovem"
+                          ? ((usuario.dados as UsuarioJovem).nome ?? "Usuário")
+                          : ((usuario.dados as UsuarioEmpresa).nome_empresa ??
+                            "Empresa")
+                      }!`
+                    : "👋 Bem-vindo!"}
             </CardTitle>
             {usuario && (
-              <div className="flex gap-2">
-                <button
-                  onClick={handleRefresh}
-                  title="Atualizar dados"
-                  className="text-sm bg-blue-500/20 hover:bg-blue-500/30 px-3 py-1 rounded"
-                >
-                  🔄
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="text-sm bg-red-500/20 hover:bg-red-500/30 px-3 py-1 rounded"
-                >
-                  Sair
-                </button>
-              </div>
+              <button
+                onClick={handleLogout}
+                className="ml-4 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold px-4 py-2 rounded-md shadow"
+              >
+                Sair
+              </button>
             )}
           </CardHeader>
-          <CardContent>
-            {carregando && (
-              <div className="text-center space-y-4 animate-pulse">
-                <div className="h-4 bg-white/20 rounded w-3/4 mx-auto"></div>
-                <div className="h-4 bg-white/20 rounded w-1/2 mx-auto"></div>
-                <div className="h-4 bg-white/20 rounded w-2/3 mx-auto"></div>
-              </div>
-            )}
-
-            {erro && (
-              <div className="text-center space-y-4">
-                <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4">
-                  <p className="text-red-200 font-medium mb-2">❌ {erro}</p>
-                  <p className="text-sm text-red-300">
-                    Verifique se você está logado corretamente.
-                  </p>
-                </div>
-                <div className="flex gap-3 justify-center">
-                  <Link
-                    href="/login"
-                    className="bg-blue-500/20 hover:bg-blue-500/30 px-4 py-2 rounded"
-                  >
-                    Ir para Login
-                  </Link>
-                  <button
-                    onClick={handleRefresh}
-                    className="bg-gray-500/20 hover:bg-gray-500/30 px-4 py-2 rounded"
-                  >
-                    Tentar Novamente
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {usuario && !carregando && !erro && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-                {cardsPersonalizados.map((card, index) => (
-                  <Link
-                    href={card.link}
-                    key={index}
-                    className="block bg-white/10 p-4 rounded-lg hover:bg-white/20 transition"
-                  >
-                    <h3 className="text-lg font-bold">{card.title}</h3>
-                    <p className="text-sm text-white/80">{card.text}</p>
-                  </Link>
-                ))}
-              </div>
-            )}
-
-            {statusCache && (
-              <p className={`mt-4 text-center text-xs ${statusCache.cor}`}>
-                {statusCache.texto}
-              </p>
-            )}
+          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 px-6 pb-8">
+            {cardsPersonalizados.map((card, index) => (
+              <Link
+                key={index}
+                href={card.link}
+                className="bg-white/10 hover:bg-white/20 transition-all duration-200 p-6 rounded-xl shadow-lg flex flex-col justify-between border border-white/30"
+              >
+                <h3 className="text-xl font-bold mb-2">{card.title}</h3>
+                <p className="text-sm text-white/80">{card.text}</p>
+              </Link>
+            ))}
           </CardContent>
         </Card>
+        {statusCache && (
+          <p className={`text-sm mt-2 ${statusCache.cor}`}>
+            {statusCache.texto}
+          </p>
+        )}
+        {erro && (
+          <p className="text-red-400 text-sm mt-2">
+            {erro}{" "}
+            <button onClick={handleRefresh} className="underline">
+              Tentar novamente
+            </button>
+          </p>
+        )}
       </main>
     </div>
   );
