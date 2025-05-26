@@ -3,13 +3,11 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Variáveis de ambiente do Supabase não configuradas')
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
 
 export type UserRole = 'jovem' | 'rh'
 
@@ -22,7 +20,6 @@ export interface UserProfile {
   company?: string
   created_at: string
 }
-
 
 export interface CadastroJovem {
   nome: string
@@ -37,7 +34,6 @@ export interface CadastroEmpresa {
   email: string
   cnpj?: string
 }
-
 
 export function validateInstitutionalEmail(email: string): boolean {
   if (!email || typeof email !== 'string') {
@@ -72,20 +68,16 @@ export function validateInstitutionalEmail(email: string): boolean {
   
   const emailLower = email.toLowerCase().trim()
   
- 
   if (personalDomains.some(domain => emailLower.endsWith(domain))) {
     return false
   }
-  
 
   if (educationalDomains.some(domain => emailLower.includes(domain))) {
     return true
   }
-  
 
   return !personalDomains.some(domain => emailLower.endsWith(domain))
 }
-
 
 export function determineUserRole(email: string): UserRole {
   if (!email || typeof email !== 'string') {
@@ -110,14 +102,12 @@ export function determineUserRole(email: string): UserRole {
   
   const emailLower = email.toLowerCase().trim()
   
-
   const isEducational = educationalDomains.some(domain => 
     emailLower.includes(domain)
   )
   
   return isEducational ? 'jovem' : 'rh'
 }
-
 
 export async function cadastrarJovem(dados: CadastroJovem) {
   try {
@@ -143,7 +133,6 @@ export async function cadastrarJovem(dados: CadastroJovem) {
       throw new Error('Email deve ser institucional ou educacional')
     }
 
-
     console.log('🔍 Verificando se email/login já existem...')
     const { data: emailCheck, error: emailError } = await supabase
       .from('jovem')
@@ -164,7 +153,6 @@ export async function cadastrarJovem(dados: CadastroJovem) {
         throw new Error('Login já cadastrado no sistema')
       }
     }
-
 
     const dadosLimpos = {
       nome: dados.nome.trim(),          
@@ -222,7 +210,6 @@ export async function cadastrarJovem(dados: CadastroJovem) {
   }
 }
 
-
 export async function cadastrarEmpresa(dados: CadastroEmpresa) {
   try {
     console.log('🔍 Iniciando cadastro de empresa:', dados)
@@ -235,7 +222,6 @@ export async function cadastrarEmpresa(dados: CadastroEmpresa) {
       throw new Error('Email é obrigatório e deve ser válido')
     }
 
-   
     const { data: emailCheck, error: emailError } = await supabase
       .from('empresas')
       .select('id, email')
@@ -249,7 +235,6 @@ export async function cadastrarEmpresa(dados: CadastroEmpresa) {
       throw new Error('Email da empresa já cadastrado')
     }
 
-    
     const dadosLimpos = {
       nome: dados.nome.trim(),
       email: dados.email.toLowerCase().trim(),
@@ -292,7 +277,7 @@ export async function cadastrarEmpresa(dados: CadastroEmpresa) {
 
 export async function testarConexao() {
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('jovem')
       .select('count')
       .limit(1)
@@ -317,124 +302,21 @@ export async function listarTabelas() {
     
     for (const tabela of tabelas) {
       try {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from(tabela)
           .select('*')
           .limit(1)
         
-        resultados[tabela] = error ? `Erro: ${error.message}` : 'OK'
-      } catch (err) {
-        resultados[tabela] = `Erro: ${err instanceof Error ? err.message : 'Erro desconhecido'}`
+        resultados[tabela] = error ? `Erro: ${error.message}` : 'Ok'
+      } catch (error) {
+        console.error(`Erro ao acessar tabela ${tabela}:`, error)
+        resultados[tabela] = 'Erro desconhecido'
       }
     }
     
-    console.log('Status das tabelas:', resultados)
     return resultados
   } catch (error) {
     console.error('Erro ao listar tabelas:', error)
-    return { error: error instanceof Error ? error.message : 'Erro desconhecido' }
-  }
-}
-
-
-export async function verificarEstruturaJovem() {
-  try {
-    const { data, error } = await supabase
-      .from('jovem')
-      .select('*')
-      .limit(0)
-
-    if (error) {
-      return {
-        success: false,
-        error: error.message,
-        campos: []
-      }
-    }
-
-    return {
-      success: true,
-      message: 'Tabela jovem acessível',
-      campos: ['id_jovem', 'login', 'senha', 'cpf', 'nome', 'email']
-    }
-
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Erro desconhecido',
-      campos: []
-    }
-  }
-}
-
-
-export async function testeInsercaoManual() {
-  const dadosTeste = {
-    nome: 'Teste Manual',
-    email: `teste${Date.now()}@estudante.edu.br`,
-    login: `teste${Date.now()}`,
-    senha: 'teste123'
-  }
-
-  try {
-    console.log('🧪 Teste de inserção manual:', {
-      ...dadosTeste,
-      senha: '[OCULTA]'
-    })
-
-    const { data, error } = await supabase
-      .from('jovem')
-      .insert(dadosTeste)
-      .select()
-
-    if (error) {
-      throw new Error(`Inserção manual falhou: ${error.message}`)
-    }
-
-    if (data && data[0]) {
-      await supabase
-        .from('jovem')
-        .delete()
-        .eq('id_jovem', data[0].id_jovem)
-    }
-
-    return {
-      success: true,
-      message: 'Inserção manual funcionou corretamente',
-      data
-    }
-
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
-    }
-  }
-}
-
-
-export async function listarJovens() {
-  try {
-    const { data, error } = await supabase
-      .from('jovem')
-      .select('id_jovem, nome, email, login, cpf')
-      .order('id_jovem', { ascending: false })
-
-    if (error) {
-      throw new Error(`Erro ao listar jovens: ${error.message}`)
-    }
-
-    return {
-      success: true,
-      data: data || [],
-      message: `${data?.length || 0} jovens encontrados`
-    }
-
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Erro desconhecido',
-      data: []
-    }
+    return {}
   }
 }
