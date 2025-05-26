@@ -1,16 +1,11 @@
-package com.orientajovem.demo.controllers;
+package com.orientajovem.demo.repositories;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.orientajovem.demo.entities.Empresa;
 
+public interface EmpresaRepository extends JpaRepository<Empresa, Integer>{
 
-@RestController
-public class Jovem {
+	Optional<Empresa> findById(Integer id);
 
-
-	@GetMapping("/")
-	public String inicio() {
-		return "Sistema de gestão de RH";
-	}
 }
-

@@ -1,16 +1,14 @@
-package com.orientajovem.demo.controllers;
+package com.orientajovem.demo.repositories;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import java.util.Optional;
+import com.orientajovem.demo.entities.Avaliacao;
 
-
-@RestController
-public class Avaliacao {
+import org.springframework.data.jpa.repository.JpaRepository;
 
 
-	@GetMapping("/")
-	public String inicio() {
-		return "Sistema de gestão de RH";
-	}
+public interface AvaliacaoRepository extends JpaRepository<Avaliacao, Integer>{
+
+	Optional<Avaliacao> findById(Integer id);
+
 }
 
