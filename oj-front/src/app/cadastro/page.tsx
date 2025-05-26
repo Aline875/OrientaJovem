@@ -1,61 +1,61 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { supabase } from '@/lib/supabase'
-import Link from 'next/link'
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
+import Link from "next/link";
 
 export default function Cadastro() {
   const [formData, setFormData] = useState({
-    nome: '',
-    email: '',
-    cpf: '',
-    senha: '',
-    confirmarSenha: ''
-  })
+    nome: "",
+    email: "",
+    cpf: "",
+    senha: "",
+    confirmarSenha: "",
+  });
 
-  const [mensagemErro, setMensagemErro] = useState('')
+  const [mensagemErro, setMensagemErro] = useState("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData({ ...formData, [name]: value })
-    setMensagemErro('')
-  }
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    setMensagemErro("");
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    const { nome, email, cpf, senha, confirmarSenha } = formData
+    const { nome, email, cpf, senha, confirmarSenha } = formData;
 
     if (!nome || !email || !cpf || !senha || !confirmarSenha) {
-      setMensagemErro('Preencha todos os campos obrigatórios.')
-      return
+      setMensagemErro("Preencha todos os campos obrigatórios.");
+      return;
     }
 
     if (senha !== confirmarSenha) {
-      setMensagemErro('As senhas não coincidem.')
-      return
+      setMensagemErro("As senhas não coincidem.");
+      return;
     }
 
-    const { error } = await supabase.from('jovem').insert([
-      { nome, email, cpf, senha }
-    ])
+    const { error } = await supabase
+      .from("jovem")
+      .insert([{ nome, email, cpf, senha }]);
 
     if (error) {
-      setMensagemErro('Erro ao cadastrar. Tente novamente.')
-      return
+      setMensagemErro("Erro ao cadastrar. Tente novamente.");
+      return;
     }
 
     setFormData({
-      nome: '',
-      email: '',
-      cpf: '',
-      senha: '',
-      confirmarSenha: ''
-    })
-  }
+      nome: "",
+      email: "",
+      cpf: "",
+      senha: "",
+      confirmarSenha: "",
+    });
+  };
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center">
@@ -171,5 +171,5 @@ export default function Cadastro() {
         </div>
       </main>
     </div>
-  )
+  );
 }

@@ -1,55 +1,65 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { supabase } from '@/lib/supabase'
-import Link from 'next/link'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
+import Link from "next/link";
 
 export default function Login() {
-  const router = useRouter()
+  const router = useRouter();
   const [formData, setFormData] = useState({
-    email: '',
-    senha: ''
-  })
+    email: "",
+    senha: "",
+  });
 
-  const [mensagemErro, setMensagemErro] = useState('')
+  const [mensagemErro, setMensagemErro] = useState("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData({ ...formData, [name]: value })
-    setMensagemErro('')
-  }
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    setMensagemErro("");
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    const { email, senha } = formData
+    const { email, senha } = formData;
 
     if (!email || !senha) {
-      setMensagemErro('Preencha todos os campos obrigatórios.')
-      return
+      setMensagemErro("Preencha todos os campos obrigatórios.");
+      return;
     }
 
     const { data: jovem, error } = await supabase
-      .from('jovem')
-      .select('*')
-      .eq('email', email)
-      .eq('senha', senha)
-      .single()
+      .from("jovem")
+      .select("*")
+      .eq("email", email)
+      .eq("senha", senha)
+      .single();
 
     if (error || !jovem) {
-      setMensagemErro('Email ou senha inválidos.')
-      return
+      setMensagemErro("Email ou senha inválidos.");
+      return;
     }
 
- 
-    console.log('Usuário logado:', jovem)
+    console.log("Usuário logado:", jovem);
 
-    router.push('/home') 
-  }
+    // ✅ ADICIONAR ESTAS LINHAS - Salvar dados da sessão no localStorage
+    const dadosSessao = {
+      id: jovem.id_jovem, // Usando o ID do jovem
+      email: jovem.email,
+      tipo: "jovem" as const, // Sempre será 'jovem' neste caso
+      timestamp: Date.now(), // Timestamp atual para controle de expiração
+    };
+
+    localStorage.setItem("usuario_sessao", JSON.stringify(dadosSessao));
+    console.log("Sessão salva:", dadosSessao); // Para debug
+
+    router.push("/home");
+  };
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center">
@@ -117,5 +127,5 @@ export default function Login() {
         </div>
       </main>
     </div>
-  )
+  );
 }

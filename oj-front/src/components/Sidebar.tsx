@@ -33,7 +33,7 @@ export default function AppSidebar() {
 
   return (
     <div className="relative ">
-     <div className="hidden lg:block">
+      <div className="hidden lg:block">
         <SidebarProvider>
           <Sidebar className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white/10 backdrop-blur-md border-r border-white/20">
             <SidebarHeader className="p-4">
@@ -46,7 +46,10 @@ export default function AppSidebar() {
                     {links.map(({ href, label, icon: Icon }) => (
                       <SidebarMenuItem key={href}>
                         <SidebarMenuButton asChild>
-                          <Link href={href} className="flex items-center gap-3 text-white hover:bg-white/20 rounded-md p-2">
+                          <Link
+                            href={href}
+                            className="flex items-center gap-3 text-white hover:bg-white/20 rounded-md p-2"
+                          >
                             <Icon size={20} />
                             {label}
                           </Link>

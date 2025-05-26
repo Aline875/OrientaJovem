@@ -8,25 +8,25 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-      
+          node-version: "18"
+          cache: "npm"
+
       - name: Instalar dependências
         run: npm install
-      
+
       - name: Build do projeto Next.js
         run: npm run build
         env:
           NODE_ENV: production
-      
+
       - name: Verificar se build foi criado
         run: |
           if [ -d ".next" ]; then
@@ -36,6 +36,6 @@ jobs:
             echo "❌ Erro: Pasta .next não foi criada"
             exit 1
           fi
-      
+
       - name: Build concluído
         run: echo "🚀 Build do Next.js finalizado com sucesso!"
