@@ -43,7 +43,7 @@ interface SessaoUsuario {
   timestamp: number;
 }
 
-const CACHE_DURACAO = 5 * 60 * 1000;
+const CACHE_DURACAO = 5 * 60 * 1000; // 5 minutos
 
 export function useDadosUsuario() {
   const [usuario, setUsuario] = useState<DadosUsuario | null>(null);
@@ -52,7 +52,7 @@ export function useDadosUsuario() {
 
   const supabase = createClientComponentClient();
 
-  const lerCacheLocal = useCallback(() => {
+  const lerCacheLocal = useCallback((): DadosUsuario | null => {
     try {
       const cacheString = localStorage.getItem("cache_usuario_dados");
       if (!cacheString) return null;
@@ -77,25 +77,17 @@ export function useDadosUsuario() {
       usuario: dados,
       timestamp: Date.now()
     };
-    
-    console.log("Salvando no cache:", cacheData); // Debug temporário
-    
     localStorage.setItem("cache_usuario_dados", JSON.stringify(cacheData));
   }, []);
 
-  // Função para verificar se o cache tem dados relacionados completos
-  const cacheTemDadosCompletos = useCallback((dadosCache: DadosUsuario) => {
-    if (dadosCache.tipo !== "jovem") return true;
-    
-    const jovem = dadosCache.dados as UsuarioJovem;
-    
-    // Se tem ID de projeto mas não tem dados do projeto, cache incompleto
-    if (jovem.id_projeto && !jovem.projeto) return false;
-    
-    // Se tem ID de tutor mas não tem dados do tutor, cache incompleto
-    if (jovem.id_tutor && !jovem.tutor) return false;
-    
-    return true;
+  const cacheTemDadosCompletos = useCallback((cache: DadosUsuario): boolean => {
+    if (cache.tipo === "empresa") return true;
+
+    const jovem = cache.dados as UsuarioJovem;
+    const projetoOk = !jovem.id_projeto || !!jovem.projeto;
+    const tutorOk = !jovem.id_tutor || !!jovem.tutor;
+
+    return projetoOk && tutorOk;
   }, []);
 
   const buscarDadosUsuario = useCallback(async () => {
@@ -114,15 +106,10 @@ export function useDadosUsuario() {
       }
 
       const cache = lerCacheLocal();
-      
-      // Só usa o cache se ele tiver dados completos
       if (cache && cacheTemDadosCompletos(cache)) {
-        console.log("Usando cache com dados completos:", cache);
         setUsuario(cache);
         return;
       }
-
-      console.log("Cache incompleto ou inexistente, buscando dados frescos...");
 
       let dadosUsuario: DadosUsuario;
 
@@ -137,14 +124,8 @@ export function useDadosUsuario() {
           .eq("id_jovem", sessao.id)
           .single();
 
-        if (error) {
-          console.error("Erro na query:", error);
-          throw error;
-        }
-        if (!data) throw new Error("Erro ao buscar dados do jovem.");
-        
-        console.log("Dados buscados do Supabase:", data);
-        
+        if (error || !data) throw new Error("Erro ao buscar dados do jovem.");
+
         dadosUsuario = { tipo: "jovem", dados: data };
       } else {
         const { data, error } = await supabase
@@ -153,21 +134,16 @@ export function useDadosUsuario() {
           .eq("id_empresa", sessao.id)
           .single();
 
-        if (error) throw error;
-        if (!data) throw new Error("Erro ao buscar dados da empresa.");
-        
+        if (error || !data) throw new Error("Erro ao buscar dados da empresa.");
+
         dadosUsuario = { tipo: "empresa", dados: data };
       }
 
       setUsuario(dadosUsuario);
       salvarCacheLocal(dadosUsuario);
-      
+
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setErro(err.message);
-      } else {
-        setErro("Erro desconhecido.");
-      }
+      setErro(err instanceof Error ? err.message : "Erro desconhecido.");
     } finally {
       setCarregando(false);
     }
