@@ -4,15 +4,20 @@ import { useDadosUsuario } from "@/hooks/useDadosUsuario";
 import { Card } from "@/components/ui/card";
 import Header from "@/components/Header";
 import AppSidebar from "@/components/Sidebar";
-import { FaLinkedin, FaGithub } from "react-icons/fa";
+import { Linkedin, Github } from "lucide-react";
 
 type DadosUsuario = {
   nome?: string;
-  nome_empresa?: string;
-  id_projeto?: string;
   email?: string;
   cpf?: string;
+  projeto?: {
+    nome_projeto: string;
+  };
+  tutor?: {
+    nome_tutor: string;
+  };
 };
+
 
 export default function PerfilJovem() {
   const { usuario, carregando, erro } = useDadosUsuario();
@@ -54,22 +59,21 @@ export default function PerfilJovem() {
                       {obterNome(dados)}
                     </p>
                     <p className="text-lg">
-                      <span className="font-semibold">Tutor</span> - Miguel
-                      Menezes
+                      <span className="font-semibold">Tutor</span>
+                      {dados.tutor ? ` - ${dados.tutor.nome_tutor}` : " - Nenhum"}
                     </p>
                     <p className="text-lg">
-                      <span className="font-semibold">Projeto atual</span> -{" "}
-                      {dados.id_projeto ?? "Nenhum"}
+                      <span className="font-semibold">Projeto atual</span> {dados.projeto ? ` - ${dados.projeto.nome_projeto}` : " - Nenhum"}
                     </p>
                   </div>
                 </div>
               </Card>
               <div className="flex items-center gap-4 justify-center">
                 <a href="#" className="text-white hover:text-blue-400 text-xl">
-                  <FaLinkedin />
+                  <Linkedin />
                 </a>
                 <a href="#" className="text-white hover:text-gray-300 text-xl">
-                  <FaGithub />
+                  <Github />
                 </a>
               </div>
               <div className="flex flex-wrap justify-center gap-4">

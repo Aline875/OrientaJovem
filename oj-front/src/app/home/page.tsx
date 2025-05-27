@@ -303,7 +303,7 @@ export default function Home() {
 
   const handleLogout = useCallback(() => {
     localStorage.clear();
-    router.push("/login");
+    router.push("/");
   }, [router]);
 
   return (
