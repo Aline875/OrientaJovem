@@ -19,7 +19,7 @@ export default function Login() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
     setMensagemErro("");
   };
 
@@ -33,32 +33,52 @@ export default function Login() {
       return;
     }
 
-    const { data: jovem, error } = await supabase
+    // Tenta autenticar como jovem
+    const { data: jovem, error: errorJovem } = await supabase
       .from("jovem")
       .select("*")
       .eq("email", email)
       .eq("senha", senha)
-      .single();
+      .maybeSingle();
 
-    if (error || !jovem) {
-      setMensagemErro("Email ou senha inválidos.");
+    if (!errorJovem && jovem) {
+      const dadosSessao = {
+        id: jovem.id_jovem,
+        email: jovem.email,
+        nome: jovem.nome,
+        tipo: "jovem" as const,
+        timestamp: Date.now(),
+      };
+
+      localStorage.setItem("usuario_sessao", JSON.stringify(dadosSessao));
+      router.push("/home");
       return;
     }
 
-    console.log("Usuário logado:", jovem);
+    // Tenta autenticar como empresa
+    const { data: empresa, error: errorEmpresa } = await supabase
+      .from("empresa")
+      .select("*")
+      .eq("email_empresa", email)
+      .eq("senha", senha)
+      .maybeSingle();
 
-    // ✅ ADICIONAR ESTAS LINHAS - Salvar dados da sessão no localStorage
-    const dadosSessao = {
-      id: jovem.id_jovem, // Usando o ID do jovem
-      email: jovem.email,
-      tipo: "jovem" as const, // Sempre será 'jovem' neste caso
-      timestamp: Date.now(), // Timestamp atual para controle de expiração
-    };
+    if (!errorEmpresa && empresa) {
+      const dadosSessao = {
+        id: empresa.id_empresa, // ou empresa.id, se for assim no seu banco
+        email: empresa.email_empresa,
+        nome: empresa.nome_empresa,
+        cnpj: empresa.cnpj,
+        tipo: "empresa" as const,
+        timestamp: Date.now(),
+      };
 
-    localStorage.setItem("usuario_sessao", JSON.stringify(dadosSessao));
-    console.log("Sessão salva:", dadosSessao); // Para debug
+      localStorage.setItem("usuario_sessao", JSON.stringify(dadosSessao));
+      router.push("/home");
+      return;
+    }
 
-    router.push("/home");
+    setMensagemErro("Email ou senha inválidos.");
   };
 
   return (
@@ -76,6 +96,10 @@ export default function Login() {
             className="w-full max-w-md flex flex-col gap-6 text-white items-center"
           >
             <h2 className="text-2xl font-semibold text-center">Entrar</h2>
+
+            <p className="text-sm text-center text-gray-300">
+              Acesso para jovens e empresas
+            </p>
 
             <div className="w-full">
               <Label htmlFor="email" className="block mb-1 text-sm font-medium">
@@ -113,7 +137,7 @@ export default function Login() {
 
             <Button
               type="submit"
-              className="w-fit bg-[#D9D9D9] text-[#323536] px-6 py-2 shadow-md"
+              className="w-fit bg-[#D9D9D9] text-[#323536] px-6 py-2 shadow-md hover:bg-[#C9C9C9]"
             >
               Entrar
             </Button>

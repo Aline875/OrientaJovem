@@ -22,9 +22,13 @@ interface UsuarioJovem {
 interface UsuarioEmpresa {
   id_empresa: number;
   nome_empresa: string;
-  email: string;
-  cnpj?: string;
+  email_empresa: string; // Corrigido para corresponder aos dados reais
+  cnpj?: number;
   telefone?: string;
+  senha?: string;
+  list_jovens?: string | null;
+  list_tutor?: string | null;
+  id_projeto?: number | null;
 }
 
 interface DadosUsuario {
@@ -62,24 +66,36 @@ function isUsuarioJovem(obj: unknown): obj is UsuarioJovem {
   return false;
 }
 
-// Função para validar se objeto é UsuarioEmpresa
+// Função para validar se objeto é UsuarioEmpresa - CORRIGIDA
 function isUsuarioEmpresa(obj: unknown): obj is UsuarioEmpresa {
   if (
     typeof obj === "object" &&
     obj !== null &&
     "id_empresa" in obj &&
     "nome_empresa" in obj &&
-    "email" in obj
+    "email_empresa" in obj // Corrigido para corresponder aos dados reais
   ) {
     const o = obj as { [key: string]: unknown };
     return (
       typeof o.id_empresa === "number" &&
       typeof o.nome_empresa === "string" &&
-      typeof o.email === "string"
+      typeof o.email_empresa === "string" // Corrigido para corresponder aos dados reais
     );
   }
   return false;
 }
+
+// Função para validar ID antes de usar em consultas
+// function validarId(id: unknown): number | null {
+//   if (typeof id === "number" && !isNaN(id) && id > 0) {
+//     return id;
+//   }
+//   if (typeof id === "string" && id !== "undefined" && !isNaN(parseInt(id))) {
+//     const numId = parseInt(id);
+//     return numId > 0 ? numId : null;
+//   }
+//   return null;
+// }
 
 export default function Home() {
   const [usuario, setUsuario] = useState<DadosUsuario | null>(null);
@@ -90,49 +106,60 @@ export default function Home() {
   const supabase = createClientComponentClient();
   const router = useRouter();
 
-  // ... (tudo acima permanece igual até...)
-
   const precisaAtualizar = useCallback(() => {
-    return Date.now() - ultimaAtualizacao > 5 * 60 * 1000; // CACHE_DURACAO
-  }, [ultimaAtualizacao]); // removido CACHE_DURACAO
+    return Date.now() - ultimaAtualizacao > 5 * 60 * 1000; // 5 minutos
+  }, [ultimaAtualizacao]);
 
-  // ...
   const salvarCacheLocal = useCallback((dadosUsuario: DadosUsuario) => {
-    localStorage.setItem(
-      "cache_usuario_dados",
-      JSON.stringify({
-        usuario: dadosUsuario,
-        timestamp: Date.now(),
-      })
-    );
+    try {
+      localStorage.setItem(
+        "cache_usuario_dados",
+        JSON.stringify({
+          usuario: dadosUsuario,
+          timestamp: Date.now(),
+        })
+      );
+    } catch (error) {
+      console.warn("Erro ao salvar cache:", error);
+    }
   }, []);
 
-  const lerCacheLocal = useCallback((): DadosUsuario | null => {
-    try {
-      const cacheString = localStorage.getItem("cache_usuario_dados");
-      if (!cacheString) return null;
+type UsuarioCache = {
+  dados: unknown;
+};
 
-      const cache: { usuario: unknown; timestamp: number } =
-        JSON.parse(cacheString);
-      const agora = Date.now();
+const lerCacheLocal = useCallback((): DadosUsuario | null => {
+  try {
+    const cacheString = localStorage.getItem("cache_usuario_dados");
+    if (!cacheString) return null;
 
-      if (agora - cache.timestamp > 5 * 60 * 1000) {
-        localStorage.removeItem("cache_usuario_dados");
-        return null;
-      }
+    const cache: { usuario: unknown; timestamp: number } = JSON.parse(cacheString);
+    const agora = Date.now();
 
-      if (isUsuarioJovem(cache.usuario) || isUsuarioEmpresa(cache.usuario)) {
-        return cache.usuario as unknown as DadosUsuario;
-      }
-
-      return null;
-    } catch {
+    if (agora - cache.timestamp > 5 * 60 * 1000) {
       localStorage.removeItem("cache_usuario_dados");
       return null;
     }
-  }, []); // removido CACHE_DURACAO das dependências
 
-  // ...
+    if (cache.usuario && typeof cache.usuario === "object") {
+      const userData = cache.usuario as UsuarioCache;
+
+      if (isUsuarioJovem(userData.dados)) {
+        return { tipo: "jovem", dados: userData.dados };
+      }
+
+      if (isUsuarioEmpresa(userData.dados)) {
+        return { tipo: "empresa", dados: userData.dados };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Erro ao ler cache local:", error);
+    return null;
+  }
+}, []);
+
 
   const buscarDadosUsuario = useCallback(
     async (forcarAtualizacao = false) => {
@@ -141,9 +168,32 @@ export default function Home() {
         setErro(null);
 
         const sessaoString = localStorage.getItem("usuario_sessao");
-        if (!sessaoString) throw new Error("Usuário não está logado");
+        if (!sessaoString) {
+          throw new Error("Usuário não está logado");
+        }
 
-        const sessao: SessaoUsuario = JSON.parse(sessaoString);
+        let sessao: SessaoUsuario;
+        try {
+          sessao = JSON.parse(sessaoString);
+        } catch {
+          localStorage.removeItem("usuario_sessao");
+          throw new Error("Dados de sessão corrompidos");
+        }
+
+        // Validar dados da sessão - versão mais permissiva
+        if (!sessao.id || (typeof sessao.id !== "number" && isNaN(parseInt(String(sessao.id))))) {
+          console.error("Sessão inválida:", sessao);
+          localStorage.removeItem("usuario_sessao");
+          throw new Error("ID de sessão inválido");
+        }
+
+        const idValido = typeof sessao.id === "number" ? sessao.id : parseInt(String(sessao.id));
+        
+        if (idValido <= 0) {
+          localStorage.removeItem("usuario_sessao");
+          throw new Error("ID de sessão deve ser maior que zero");
+        }
+
         const agora = Date.now();
         const tempoExpiracao = 24 * 60 * 60 * 1000;
 
@@ -153,6 +203,7 @@ export default function Home() {
           throw new Error("Sessão expirada. Faça login novamente.");
         }
 
+        // Tentar usar cache se não forçar atualização
         if (!forcarAtualizacao) {
           const dadosCache = lerCacheLocal();
           if (dadosCache) {
@@ -162,54 +213,84 @@ export default function Home() {
           }
         }
 
+        console.log("Buscando dados para:", { tipo: sessao.tipo, id: idValido });
+
+        // Buscar dados do banco
         if (sessao.tipo === "jovem") {
           const { data, error } = await supabase
             .from("jovem")
             .select(
               "id_jovem, login, cpf, nome, email, list_avaliação, id_projeto, id_tutor, id_empresa"
             )
-            .eq("id_jovem", sessao.id)
+            .eq("id_jovem", idValido)
             .single();
 
-          if (error || !data) throw new Error("Erro ao buscar dados do jovem.");
+          if (error) {
+            console.error("Erro do Supabase (jovem):", error);
+            throw new Error(`Erro ao buscar dados do jovem: ${error.message}`);
+          }
+
+          if (!data) {
+            throw new Error("Nenhum dado encontrado para este jovem.");
+          }
 
           if (!isUsuarioJovem(data)) {
+            console.error("Dados inválidos do jovem:", data);
             throw new Error("Dados do jovem estão em formato inválido.");
           }
 
           const dadosUsuario: DadosUsuario = { tipo: "jovem", dados: data };
           setUsuario(dadosUsuario);
           salvarCacheLocal(dadosUsuario);
+
         } else if (sessao.tipo === "empresa") {
           const { data, error } = await supabase
             .from("empresa")
             .select("*")
-            .eq("id_empresa", sessao.id)
+            .eq("id_empresa", idValido)
             .single();
 
-          if (error || !data)
-            throw new Error("Erro ao buscar dados da empresa.");
+          if (error) {
+            console.error("Erro do Supabase (empresa):", error);
+            throw new Error(`Erro ao buscar dados da empresa: ${error.message}`);
+          }
+
+          if (!data) {
+            throw new Error("Nenhum dado encontrado para esta empresa.");
+          }
+
+          console.log("Dados da empresa recebidos:", data);
 
           if (!isUsuarioEmpresa(data)) {
+            console.error("Dados inválidos da empresa:", data);
             throw new Error("Dados da empresa estão em formato inválido.");
           }
 
           const dadosUsuario: DadosUsuario = { tipo: "empresa", dados: data };
           setUsuario(dadosUsuario);
           salvarCacheLocal(dadosUsuario);
+
+        } else {
+          throw new Error("Tipo de usuário inválido na sessão.");
         }
 
         setUltimaAtualizacao(Date.now());
+
       } catch (error: unknown) {
-        const msg =
-          error instanceof Error ? error.message : "Erro desconhecido";
-        console.error(msg);
+        const msg = error instanceof Error ? error.message : "Erro desconhecido";
+        console.error("Erro em buscarDadosUsuario:", msg);
         setErro(msg);
+        
+        // Se erro for de autenticação, limpar dados e redirecionar
+        if (msg.includes("logado") || msg.includes("sessão") || msg.includes("Sessão")) {
+          localStorage.clear();
+          router.push("/");
+        }
       } finally {
         setCarregando(false);
       }
     },
-    [supabase, lerCacheLocal, salvarCacheLocal] // removido CACHE_DURACAO
+    [supabase, lerCacheLocal, salvarCacheLocal, router]
   );
 
   useEffect(() => {
@@ -238,7 +319,7 @@ export default function Home() {
         {
           title: "Login",
           text: "Faça login para acessar o sistema.",
-          link: "/login",
+          link: "/",
         },
         {
           title: "Cadastro",
@@ -275,17 +356,17 @@ export default function Home() {
           {
             title: "Perfil da Empresa",
             text: "Gerencie as informações da sua empresa.",
-            link: "/empresa/perfil",
+            link: "/empresaPage/profile",
           },
           {
             title: "Publicar Vagas",
             text: "Crie e gerencie oportunidades para jovens.",
-            link: "/empresa/vagas",
+            link: "/empresaPage/Projects",
           },
           {
             title: "Candidatos",
             text: "Visualize e avalie candidatos às suas vagas.",
-            link: "/empresa/candidatos",
+            link: "/empresaPage/dashboard",
           },
         ];
   }, [usuario]);
@@ -306,6 +387,18 @@ export default function Home() {
     router.push("/");
   }, [router]);
 
+  const obterNomeUsuario = useCallback(() => {
+    if (!usuario) return "Usuário";
+    
+    if (usuario.tipo === "jovem") {
+      const jovem = usuario.dados as UsuarioJovem;
+      return jovem.nome || "Jovem";
+    } else {
+      const empresa = usuario.dados as UsuarioEmpresa;
+      return empresa.nome_empresa || "Empresa";
+    }
+  }, [usuario]);
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-t from-[#1A5579] to-[#2A2570] text-white">
       <Header />
@@ -318,18 +411,13 @@ export default function Home() {
                 : erro
                   ? "❌ Erro ao carregar dados"
                   : usuario
-                    ? `👋 Olá, ${
-                        usuario.tipo === "jovem"
-                          ? ((usuario.dados as UsuarioJovem).nome ?? "Usuário")
-                          : ((usuario.dados as UsuarioEmpresa).nome_empresa ??
-                            "Empresa")
-                      }!`
+                    ? `👋 Olá, ${obterNomeUsuario()}!`
                     : "👋 Bem-vindo!"}
             </CardTitle>
             {usuario && (
               <button
                 onClick={handleLogout}
-                className="ml-4 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold px-4 py-2 rounded-md shadow"
+                className="ml-4 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold px-4 py-2 rounded-md shadow transition-colors"
               >
                 Sair
               </button>
@@ -348,18 +436,23 @@ export default function Home() {
             ))}
           </CardContent>
         </Card>
+        
         {statusCache && (
           <p className={`text-sm mt-2 ${statusCache.cor}`}>
             {statusCache.texto}
           </p>
         )}
+        
         {erro && (
-          <p className="text-red-400 text-sm mt-2">
-            {erro}{" "}
-            <button onClick={handleRefresh} className="underline">
+          <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 max-w-md text-center">
+            <p className="text-red-300 text-sm mb-2">{erro}</p>
+            <button
+              onClick={handleRefresh}
+              className="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded transition-colors"
+            >
               Tentar novamente
             </button>
-          </p>
+          </div>
         )}
       </main>
     </div>
