@@ -4,10 +4,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 
-public interface JovemRepository extends JpaRepository<Jovem, Integer>{
+@RestController
+public class AvaliacaoController {
 
-	Optional<Jovem> findById(Int id);
 
+	@GetMapping("/")
+	public String inicio() {
+		return "Sistema de gestão de RH";
+	}
 }
-
 
