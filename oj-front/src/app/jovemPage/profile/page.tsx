@@ -8,43 +8,49 @@ import { Linkedin, Github } from "lucide-react";
 
 type DadosJovem = {
   nome: string;
-  email: string;
-  cpf: string;
+  email?: string;
+  cpf?: string;
   projeto?: {
     nome_projeto: string;
   };
   tutor?: {
     nome_tutor: string;
   };
+  nome_tutor?: string;
+  nome_projeto?: string;
 };
 
-interface UsuarioJovem {
-  tipo: "jovem";
-  dados: DadosJovem;
-}
-
-// Type guard melhorado para validar tipo e estrutura
-function isUsuarioJovem(usuario: unknown): usuario is UsuarioJovem {
-  if (
-    typeof usuario === "object" &&
-    usuario !== null &&
-    "tipo" in usuario &&
-    typeof (usuario as { tipo?: unknown }).tipo === "string" &&
-    (usuario as { tipo: string }).tipo === "jovem" &&
-    "dados" in usuario
-  ) {
-    const dados = (usuario as { dados?: unknown }).dados;
-    return (
-      typeof dados === "object" &&
-      dados !== null &&
-      typeof (dados as { nome?: unknown }).nome === "string" &&
-      typeof (dados as { email?: unknown }).email === "string" &&
-      typeof (dados as { cpf?: unknown }).cpf === "string"
-    );
+// Função auxiliar para extrair dados independente da estrutura
+function extrairDadosUsuario(usuario: unknown): DadosJovem | null {
+  if (!usuario || typeof usuario !== 'object') {
+    return null;
   }
-  return false;
-}
 
+  const usuarioObj = usuario as Record<string, unknown>;
+
+  // Se já tem a estrutura esperada
+  if (usuarioObj.dados && typeof usuarioObj.dados === 'object' && usuarioObj.dados !== null) {
+    const dados = usuarioObj.dados as Record<string, unknown>;
+    if (typeof dados.nome === 'string') {
+      return dados as DadosJovem;
+    }
+  }
+  
+  // Se os dados estão diretamente no objeto usuario
+  if (typeof usuarioObj.nome === 'string') {
+    return usuarioObj as DadosJovem;
+  }
+  
+  // Se está dentro de outra propriedade
+  if (usuarioObj.user && typeof usuarioObj.user === 'object' && usuarioObj.user !== null) {
+    const user = usuarioObj.user as Record<string, unknown>;
+    if (typeof user.nome === 'string') {
+      return user as DadosJovem;
+    }
+  }
+  
+  return null;
+}
 
 export default function PerfilJovem() {
   const { usuario, carregando, erro } = useDadosUsuario();
@@ -57,12 +63,16 @@ export default function PerfilJovem() {
   if (erro)
     return <p className="text-center mt-10 text-red-500">Erro: {erro}</p>;
 
-  if (!usuario || !isUsuarioJovem(usuario))
-    return (
-      <p className="text-center mt-10 text-yellow-600">Usuário inválido.</p>
-    );
+  const dados = extrairDadosUsuario(usuario);
 
-  const dados = usuario.dados;
+  if (!dados || !dados.nome) {
+    console.log("Estrutura do usuario:", usuario);
+    return (
+      <p className="text-center mt-10 text-yellow-600">
+        Dados do usuário não encontrados. Verifique o console para mais detalhes.
+      </p>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-t from-[#1A5579] to-[#2A2570] flex flex-col">
@@ -74,21 +84,23 @@ export default function PerfilJovem() {
             <Card className="rounded-3xl bg-[#64748b]/30 backdrop-blur-md p-6 shadow-lg">
               <div className="flex flex-col md:flex-row items-center gap-6">
                 <div className="w-32 h-32 rounded-full border-4 border-white flex items-center justify-center text-4xl font-bold bg-white text-gray-800">
-                  {dados.nome.charAt(0).toUpperCase() || "?"}
+                  {dados.nome?.charAt(0).toUpperCase() || "?"}
                 </div>
 
                 <div className="space-y-2">
                   <p className="text-lg">
-                    <span className="font-semibold">Nome</span> - {dados.nome}
+                    <span className="font-semibold">Nome</span> - {dados.nome || "Não informado"}
                   </p>
                   <p className="text-lg">
                     <span className="font-semibold">Tutor</span>
-                    {dados.tutor ? ` - ${dados.tutor.nome_tutor}` : " - Nenhum"}
+                    {dados.tutor?.nome_tutor || dados.nome_tutor 
+                      ? ` - ${dados.tutor?.nome_tutor || dados.nome_tutor}` 
+                      : " - Nenhum"}
                   </p>
                   <p className="text-lg">
                     <span className="font-semibold">Projeto atual</span>
-                    {dados.projeto
-                      ? ` - ${dados.projeto.nome_projeto}`
+                    {dados.projeto?.nome_projeto || dados.nome_projeto
+                      ? ` - ${dados.projeto?.nome_projeto || dados.nome_projeto}`
                       : " - Nenhum"}
                   </p>
                 </div>
@@ -122,8 +134,8 @@ export default function PerfilJovem() {
               <h2 className="text-lg font-semibold mb-2">
                 Informações do currículo
               </h2>
-              <p>Email: {dados.email}</p>
-              <p>CPF: {dados.cpf}</p>
+              <p>Email: {dados.email || "Não informado"}</p>
+              <p>CPF: {dados.cpf || "Não informado"}</p>
             </Card>
           </div>
         </main>
