@@ -1,29 +1,41 @@
-name: "generate-types"
+name: "Build Next.js Project"
 
 on:
   push:
     branches:
-      - main
+      - feat-jovemPage
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Log inicial
-        run: echo "Workflow iniciado com sucesso 🎉"
+      - name: Checkout código
+        uses: actions/checkout@v4
 
-      - uses: supabase/setup-cli@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          version: latest
+          node-version: "18"
+          cache: "npm"
 
-      - run: supabase init
-      - run: supabase db start
+      - name: Instalar dependências
+        run: npm install
 
-      - name: Verificar tipos gerados
+      - name: Build do projeto Next.js
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Verificar se build foi criado
         run: |
-          supabase gen types typescript --local > schema.gen.ts
-          if ! git diff --ignore-space-at-eol --exit-code --quiet schema.gen.ts; then
-            echo "Detected uncommitted changes after build. See status below:"
-            git diff
+          if [ -d ".next" ]; then
+            echo "✅ Pasta .next criada com sucesso!"
+            ls -la .next/
+          else
+            echo "❌ Erro: Pasta .next não foi criada"
             exit 1
           fi
+
+      - name: Build concluído
+        run: echo "🚀 Build do Next.js finalizado com sucesso!"
