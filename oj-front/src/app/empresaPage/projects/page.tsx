@@ -14,6 +14,13 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,49 +29,91 @@ import { Plus } from "lucide-react";
 
 // Tipagem ajustada para refletir o retorno do Supabase
 type ProjetoComTutorFromDB = {
-  id_projeto: string;
+  id_projeto: number;
   nome_projeto: string;
   descricao: string;
-  avaliacao_jovem: number;
-  id_empresa: string;
-  id_tutor: string;
-  tutor: { nome_tutor: string; email: string }[]; // Supabase retorna array mesmo que tenha 1
+  avaliacao_jovem: string | null;
+  list_jovem: string | null;
+  id_empresa: number;
+  id_tutor: number | null;
+  tutor: { 
+    id_tutor: number;
+    nome_tutor: string; 
+    email: string;
+    login: string;
+    cpf: number;
+  }[] | null; // Supabase retorna array mesmo que tenha 1
 };
 
 interface Tutor {
+  id_tutor: number;
   nome_tutor: string;
   email: string;
+  login: string;
+  cpf: number;
 }
 
 interface Projeto {
-  id_projeto: string;
+  id_projeto: number;
   nome_projeto: string;
   descricao: string;
-  avaliacao_jovem?: number;
-  id_empresa: string;
-  id_tutor?: string | null;
+  avaliacao_jovem?: string | null;
+  list_jovem?: string | null;
+  id_empresa: number;
+  id_tutor?: number | null;
   tutor?: Tutor | null; // o que será exibido
 }
 
 interface NovoProjetoForm {
   nome_projeto: string;
   descricao: string;
+  id_tutor: string;
 }
 
 export default function ProjetosDaEmpresa() {
   const [projetos, setProjetos] = useState<Projeto[]>([]);
+  const [tutores, setTutores] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingTutores, setLoadingTutores] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [salvandoProjeto, setSalvandoProjeto] = useState(false);
   const [formData, setFormData] = useState<NovoProjetoForm>({
     nome_projeto: "",
     descricao: "",
+    id_tutor: "",
   });
 
   useEffect(() => {
     fetchProjetos();
+    fetchTutores();
   }, []);
+
+  async function fetchTutores() {
+    try {
+      setLoadingTutores(true);
+
+      // Busca tutores que ainda não estão vinculados a um projeto específico
+      // ou que estão disponíveis para atribuição
+      const { data, error: supabaseError } = await supabase
+        .from("tutor")
+        .select("id_tutor, nome_tutor, email, login, cpf")
+        .order("nome_tutor");
+
+      if (supabaseError) {
+        console.error("Erro ao buscar tutores:", supabaseError.message);
+        return;
+      }
+
+      if (data) {
+        setTutores(data);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar tutores:", err);
+    } finally {
+      setLoadingTutores(false);
+    }
+  }
 
   async function fetchProjetos() {
     try {
@@ -86,11 +135,15 @@ export default function ProjetosDaEmpresa() {
         nome_projeto,
         descricao,
         avaliacao_jovem,
+        list_jovem,
         id_empresa,
         id_tutor,
         tutor:id_tutor (
+          id_tutor,
           nome_tutor,
-          email
+          email,
+          login,
+          cpf
         )
       `
         )
@@ -101,18 +154,40 @@ export default function ProjetosDaEmpresa() {
       }
 
       if (data) {
+        console.log("Dados brutos do Supabase:", data); // Debug
+        
         const projetosFormatados: Projeto[] = (
           data as ProjetoComTutorFromDB[]
-        ).map((item) => ({
-          id_projeto: item.id_projeto,
-          nome_projeto: item.nome_projeto,
-          descricao: item.descricao,
-          avaliacao_jovem: item.avaliacao_jovem,
-          id_empresa: item.id_empresa,
-          id_tutor: item.id_tutor,
-          tutor: item.tutor.length > 0 ? item.tutor[0] : null,
-        }));
+        ).map((item) => {
+          console.log("Item sendo processado:", item); // Debug
+          
+          // Correção: verificar se tutor é array ou objeto
+          let tutorFormatado: Tutor | null = null;
+          
+          if (item.tutor) {
+            if (Array.isArray(item.tutor) && item.tutor.length > 0) {
+              tutorFormatado = item.tutor[0];
+            } else if (!Array.isArray(item.tutor)) {
+              // Se por algum motivo vier como objeto direto
+              tutorFormatado = item.tutor as Tutor;
+            }
+          }
+          
+          console.log("Tutor formatado:", tutorFormatado); // Debug
+          
+          return {
+            id_projeto: item.id_projeto,
+            nome_projeto: item.nome_projeto,
+            descricao: item.descricao,
+            avaliacao_jovem: item.avaliacao_jovem,
+            list_jovem: item.list_jovem,
+            id_empresa: item.id_empresa,
+            id_tutor: item.id_tutor,
+            tutor: tutorFormatado,
+          };
+        });
 
+        console.log("Projetos formatados:", projetosFormatados); // Debug
         setProjetos(projetosFormatados);
       }
     } catch (err) {
@@ -137,20 +212,25 @@ export default function ProjetosDaEmpresa() {
 
       const usuario = JSON.parse(sessao);
 
+      const projetoData = {
+        nome_projeto: formData.nome_projeto.trim(),
+        descricao: formData.descricao.trim(),
+        id_empresa: usuario.id,
+        ...(formData.id_tutor && formData.id_tutor !== "" && { id_tutor: parseInt(formData.id_tutor) }),
+      };
+
+      console.log("Dados do projeto a serem inseridos:", projetoData); // Debug
+
       const { error: insertError } = await supabase
         .from("projeto")
-        .insert({
-          nome_projeto: formData.nome_projeto.trim(),
-          descricao: formData.descricao.trim(),
-          id_empresa: usuario.id,
-        })
+        .insert(projetoData)
         .select();
 
       if (insertError) {
         throw new Error(`Erro ao criar projeto: ${insertError.message}`);
       }
 
-      setFormData({ nome_projeto: "", descricao: "" });
+      setFormData({ nome_projeto: "", descricao: "", id_tutor: "" });
       setIsModalOpen(false);
       await fetchProjetos();
       alert("Projeto criado com sucesso!");
@@ -253,6 +333,42 @@ export default function ProjetosDaEmpresa() {
                       disabled={salvandoProjeto}
                     />
                   </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="tutor">Tutor (Opcional)</Label>
+                    <Select
+                      value={formData.id_tutor}
+                      onValueChange={(value) =>
+                        handleInputChange("id_tutor", value)
+                      }
+                      disabled={salvandoProjeto || loadingTutores}
+                    >
+                      <SelectTrigger>
+                        <SelectValue 
+                          placeholder={
+                            loadingTutores 
+                              ? "Carregando tutores..." 
+                              : "Selecione um tutor (opcional)"
+                          } 
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sem-tutor">Nenhum tutor</SelectItem>
+                        {tutores.map((tutor) => (
+                          <SelectItem 
+                            key={tutor.id_tutor} 
+                            value={tutor.id_tutor.toString()}
+                          >
+                            {tutor.nome_tutor} ({tutor.email})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {tutores.length === 0 && !loadingTutores && (
+                      <p className="text-sm text-gray-500">
+                        Nenhum tutor disponível no sistema
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <DialogFooter>
                   <DialogClose asChild>
@@ -313,7 +429,7 @@ export default function ProjetosDaEmpresa() {
                       {projeto.descricao}
                     </p>
 
-                    {typeof projeto.avaliacao_jovem === "number" && (
+                    {typeof projeto.avaliacao_jovem === "string" && projeto.avaliacao_jovem && (
                       <div className="mb-4 p-3 bg-blue-50 rounded-md">
                         <p className="text-sm font-medium text-blue-800 mb-1">
                           Avaliação do Jovem:
@@ -324,16 +440,30 @@ export default function ProjetosDaEmpresa() {
                       </div>
                     )}
 
+                    {projeto.list_jovem && (
+                      <div className="mb-4 p-3 bg-green-50 rounded-md">
+                        <p className="text-sm font-medium text-green-800 mb-1">
+                          Lista de Jovens:
+                        </p>
+                        <p className="text-sm text-green-700">
+                          {projeto.list_jovem}
+                        </p>
+                      </div>
+                    )}
+
                     <div className="border-t pt-4">
                       {projeto.tutor ? (
                         <div className="text-sm">
                           <p className="font-medium text-gray-800 mb-1">
-                            Tutor:
+                            Tutor Atribuído:
                           </p>
-                          <p className="text-gray-700">
+                          <p className="text-gray-700 font-medium">
                             {projeto.tutor.nome_tutor}
                           </p>
                           <p className="text-gray-600">{projeto.tutor.email}</p>
+                          <p className="text-gray-500 text-xs mt-1">
+                            ID: {projeto.tutor.id_tutor}
+                          </p>
                         </div>
                       ) : (
                         <p className="text-sm italic text-gray-500">
