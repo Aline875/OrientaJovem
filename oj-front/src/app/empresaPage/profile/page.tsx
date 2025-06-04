@@ -19,7 +19,6 @@ type DadosEmpresa = {
   };
 };
 
-
 // Função auxiliar para extrair dados independente da estrutura
 function extrairDadosEmpresa(usuario: unknown): DadosEmpresa | null {
   if (!usuario || typeof usuario !== "object") return null;
@@ -46,7 +45,9 @@ export default function PerfilEmpresa() {
   const { usuario, carregando, erro } = useDadosUsuario();
 
   if (carregando)
-    return <p className="text-center mt-10 text-gray-600">Carregando dados...</p>;
+    return (
+      <p className="text-center mt-10 text-gray-600">Carregando dados...</p>
+    );
 
   if (erro)
     return <p className="text-center mt-10 text-red-500">Erro: {erro}</p>;
@@ -57,7 +58,8 @@ export default function PerfilEmpresa() {
     console.log("Estrutura do usuário:", usuario);
     return (
       <p className="text-center mt-10 text-yellow-600">
-        Dados da empresa não encontrados. Verifique o console para mais detalhes.
+        Dados da empresa não encontrados. Verifique o console para mais
+        detalhes.
       </p>
     );
   }
@@ -77,10 +79,12 @@ export default function PerfilEmpresa() {
                 </div>
                 <div className="space-y-2">
                   <p className="text-lg">
-                    <span className="font-semibold">Empresa</span> - {dados.nome_empresa || "Não informado"}
+                    <span className="font-semibold">Empresa</span> -{" "}
+                    {dados.nome_empresa || "Não informado"}
                   </p>
                   <p className="text-lg">
-                    <span className="font-semibold">CNPJ</span> - {dados.cnpj || "Não informado"}
+                    <span className="font-semibold">CNPJ</span> -{" "}
+                    {dados.cnpj || "Não informado"}
                   </p>
                 </div>
               </div>

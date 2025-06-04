@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Sidebar,
   SidebarContent,
@@ -17,22 +19,44 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LayoutDashboard, User, Folder, BarChart } from "lucide-react";
 import Link from "next/link";
 
 export default function AppSidebar() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [links, setLinks] = useState<
+    { href: string; label: string; icon: React.ElementType }[]
+  >([]);
 
-  const links = [
-    { href: "/home", label: "Home", icon: LayoutDashboard },
-    { href: "/jovemPage/profile", label: "Perfil", icon: User },
-    { href: "/jovemPage/projects", label: "Projetos", icon: Folder },
-    { href: "/jovemPage/dashboard", label: "Desempenho", icon: BarChart },
-  ];
+  useEffect(() => {
+    const session = localStorage.getItem("usuario_sessao");
+    if (session) {
+      const usuario = JSON.parse(session);
+      const tipo = usuario.tipo;
+
+      const jovemLinks = [
+        { href: "/jovemPage/profile", label: "Perfil", icon: User },
+        { href: "/jovemPage/projects", label: "Projetos", icon: Folder },
+        { href: "/jovemPage/dashboard", label: "Desempenho", icon: BarChart },
+      ];
+
+      const empresaLinks = [
+        { href: "/empresaPage/profile", label: "Perfil", icon: User },
+        { href: "/empresaPage/projects", label: "Projetos", icon: Folder },
+        { href: "/empresaPage/dashboard", label: "Desempenho", icon: BarChart },
+      ];
+
+      setLinks([
+        { href: "/home", label: "Home", icon: LayoutDashboard },
+        ...(tipo === "empresa" ? empresaLinks : jovemLinks),
+      ]);
+    }
+  }, []);
 
   return (
-    <div className="relative ">
+    <div className="relative">
+      {/* Desktop */}
       <div className="hidden lg:block">
         <SidebarProvider>
           <Sidebar className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white/10 backdrop-blur-md border-r border-white/20">
@@ -64,6 +88,7 @@ export default function AppSidebar() {
         </SidebarProvider>
       </div>
 
+      {/* Mobile */}
       <div className="lg:hidden">
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <SheetTrigger>

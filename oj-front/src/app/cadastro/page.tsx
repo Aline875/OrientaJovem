@@ -9,7 +9,7 @@ import Link from "next/link";
 
 export default function Cadastro() {
   const [tipoUsuario, setTipoUsuario] = useState<"jovem" | "empresa">("jovem");
-  
+
   const [formDataJovem, setFormDataJovem] = useState({
     nome: "",
     email: "",
@@ -80,7 +80,8 @@ export default function Cadastro() {
   const handleSubmitEmpresa = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const { nome_empresa, cnpj, email_empresa, senha, confirmarSenha } = formDataEmpresa;
+    const { nome_empresa, cnpj, email_empresa, senha, confirmarSenha } =
+      formDataEmpresa;
 
     if (!nome_empresa || !cnpj || !email_empresa || !senha || !confirmarSenha) {
       setMensagemErro("Preencha todos os campos obrigatórios.");
@@ -92,14 +93,14 @@ export default function Cadastro() {
       return;
     }
 
-    const { error } = await supabase
-      .from("empresa")
-      .insert([{ 
-        nome_empresa, 
-        cnpj, 
-        email_empresa, 
-        senha 
-      }]);
+    const { error } = await supabase.from("empresa").insert([
+      {
+        nome_empresa,
+        cnpj,
+        email_empresa,
+        senha,
+      },
+    ]);
 
     if (error) {
       setMensagemErro("Erro ao cadastrar empresa. Tente novamente.");
@@ -163,10 +164,15 @@ export default function Cadastro() {
                 onSubmit={handleSubmitJovem}
                 className="w-full flex flex-col gap-6 items-center"
               >
-                <h2 className="text-2xl font-semibold text-center">Cadastro Jovem</h2>
+                <h2 className="text-2xl font-semibold text-center">
+                  Cadastro Jovem
+                </h2>
 
                 <div className="w-full">
-                  <Label htmlFor="nome" className="block mb-1 text-sm font-medium">
+                  <Label
+                    htmlFor="nome"
+                    className="block mb-1 text-sm font-medium"
+                  >
                     Nome
                   </Label>
                   <Input
@@ -181,7 +187,10 @@ export default function Cadastro() {
                 </div>
 
                 <div className="w-full">
-                  <Label htmlFor="email" className="block mb-1 text-sm font-medium">
+                  <Label
+                    htmlFor="email"
+                    className="block mb-1 text-sm font-medium"
+                  >
                     Email
                   </Label>
                   <Input
@@ -196,7 +205,10 @@ export default function Cadastro() {
                 </div>
 
                 <div className="w-full">
-                  <Label htmlFor="cpf" className="block mb-1 text-sm font-medium">
+                  <Label
+                    htmlFor="cpf"
+                    className="block mb-1 text-sm font-medium"
+                  >
                     CPF
                   </Label>
                   <Input
@@ -211,7 +223,10 @@ export default function Cadastro() {
                 </div>
 
                 <div className="w-full">
-                  <Label htmlFor="senha" className="block mb-1 text-sm font-medium">
+                  <Label
+                    htmlFor="senha"
+                    className="block mb-1 text-sm font-medium"
+                  >
                     Senha
                   </Label>
                   <Input
@@ -258,10 +273,15 @@ export default function Cadastro() {
                 onSubmit={handleSubmitEmpresa}
                 className="w-full flex flex-col gap-6 items-center"
               >
-                <h2 className="text-2xl font-semibold text-center">Cadastro Empresa</h2>
+                <h2 className="text-2xl font-semibold text-center">
+                  Cadastro Empresa
+                </h2>
 
                 <div className="w-full">
-                  <Label htmlFor="nome_empresa" className="block mb-1 text-sm font-medium">
+                  <Label
+                    htmlFor="nome_empresa"
+                    className="block mb-1 text-sm font-medium"
+                  >
                     Nome da Empresa
                   </Label>
                   <Input
@@ -276,7 +296,10 @@ export default function Cadastro() {
                 </div>
 
                 <div className="w-full">
-                  <Label htmlFor="cnpj" className="block mb-1 text-sm font-medium">
+                  <Label
+                    htmlFor="cnpj"
+                    className="block mb-1 text-sm font-medium"
+                  >
                     CNPJ
                   </Label>
                   <Input
@@ -291,7 +314,10 @@ export default function Cadastro() {
                 </div>
 
                 <div className="w-full">
-                  <Label htmlFor="email_empresa" className="block mb-1 text-sm font-medium">
+                  <Label
+                    htmlFor="email_empresa"
+                    className="block mb-1 text-sm font-medium"
+                  >
                     Email
                   </Label>
                   <Input
@@ -306,7 +332,10 @@ export default function Cadastro() {
                 </div>
 
                 <div className="w-full">
-                  <Label htmlFor="senhaEmpresa" className="block mb-1 text-sm font-medium">
+                  <Label
+                    htmlFor="senhaEmpresa"
+                    className="block mb-1 text-sm font-medium"
+                  >
                     Senha
                   </Label>
                   <Input
@@ -353,7 +382,9 @@ export default function Cadastro() {
             )}
 
             {mensagemSucesso && (
-              <p className="text-sm text-green-300 text-center">{mensagemSucesso}</p>
+              <p className="text-sm text-green-300 text-center">
+                {mensagemSucesso}
+              </p>
             )}
 
             <div className="flex flex-col gap-1 text-sm mt-2 text-center">
