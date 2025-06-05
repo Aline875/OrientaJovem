@@ -20,73 +20,65 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { createClient } from '@supabase/supabase-js';
-
-// Configure seu Supabase (ajuste com suas credenciais)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'YOUR_SUPABASE_URL';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from "@/lib/supabase";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 export default function Dashboard() {
   const [avaliacaoData, setAvaliacaoData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [jovemSelecionado, setJovemSelecionado] = useState(null);
 
-  // Função para buscar dados da tabela avaliacao via Supabase
-  const fetchAvaliacaoData = async (idJovem = null) => {
+  useEffect(() => {
+    const fetchUsuarioLogado = async () => {
+      const usuario_sessao = localStorage.getItem("usuario_sessao");
+      if (!usuario_sessao) return;
+      const usuario = JSON.parse(usuario_sessao);
+      if (usuario?.tipo === "jovem" && usuario?.id) {
+        await fetchAvaliacaoData(usuario.id);
+      }
+    };
+    fetchUsuarioLogado();
+  }, []);
+
+  const fetchAvaliacaoData = async (idJovem) => {
     try {
       setLoading(true);
-      
       let query = supabase
-        .from('avaliacao')
-        .select(`
-          *,
-          jovem!inner(
-            id_jovem,
-            nome
-          )
-        `)
-        .order('created_at', { ascending: true });
+        .from("avaliacao")
+        .select(`*, jovem!inner(id_jovem, nome)`)
+        .eq("id_jovem", idJovem)
+        .order("created_at", { ascending: true });
 
-      // Se especificar um jovem, filtrar por ele
-      if (idJovem) {
-        query = query.eq('id_jovem', idJovem);
-      }
-      
       const { data, error: supabaseError } = await query;
-      
-      if (supabaseError) {
-        throw new Error(`Erro do Supabase: ${supabaseError.message}`);
-      }
-      
-      if (!data || data.length === 0) {
-        throw new Error('Nenhuma avaliação encontrada');
-      }
-      
-      // Processar dados para agrupar por mês
+
+      if (supabaseError) throw new Error(supabaseError.message);
+      if (!data || data.length === 0) throw new Error("Nenhuma avaliação encontrada");
+
       const dadosProcessados = processarDadosPorMes(data);
       setAvaliacaoData(dadosProcessados);
-      
     } catch (err) {
       setError(err.message);
-      console.error('Erro ao buscar avaliações:', err);
-      // Em caso de erro, usar dados de exemplo
       setAvaliacaoData(dadosExemplo);
+      console.error("Erro ao buscar avaliações:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Função para processar dados e agrupar por mês
   const processarDadosPorMes = (dados) => {
     const dadosAgrupados = {};
-    
-    dados.forEach(avaliacao => {
+
+    dados.forEach((avaliacao) => {
       const data = new Date(avaliacao.created_at);
-      const mesAno = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
-      const mesNome = data.toLocaleDateString('pt-BR', { month: 'short' });
-      
+      const mesAno = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}`;
+      const mesNome = data.toLocaleDateString("pt-BR", { month: "short" });
+
       if (!dadosAgrupados[mesAno]) {
         dadosAgrupados[mesAno] = {
           mes: mesNome.charAt(0).toUpperCase() + mesNome.slice(1),
@@ -94,101 +86,61 @@ export default function Dashboard() {
           notas: [],
           habilidades: [],
           feedbacks: [],
-          totalAvaliacoes: 0
+          totalAvaliacoes: 0,
         };
       }
-      
-      // Processar as notas (assumindo que podem estar em formato string)
+
       if (avaliacao.notas) {
-        try {
-          // Se for um número direto
-          const nota = parseFloat(avaliacao.notas);
-          if (!isNaN(nota) && nota >= 0 && nota <= 10) {
-            dadosAgrupados[mesAno].notas.push(nota);
-          }
-        } catch (e) {
-          // Se houver erro na conversão, tentar extrair números da string
-          const notasNaString = avaliacao.notas.match(/\d+\.?\d*/g);
-          if (notasNaString) {
-            notasNaString.forEach(notaStr => {
-              const nota = parseFloat(notaStr);
-              if (!isNaN(nota) && nota >= 0 && nota <= 10) {
-                dadosAgrupados[mesAno].notas.push(nota);
-              }
-            });
-          }
+        const notasArray = avaliacao.notas.split(",").map((n) => parseFloat(n.trim()));
+        const notasValidas = notasArray.filter((n) => !isNaN(n) && n >= 0 && n <= 10);
+
+        if (notasValidas.length > 0) {
+          const media = notasValidas.reduce((a, b) => a + b, 0) / notasValidas.length;
+          dadosAgrupados[mesAno].notas.push(media);
         }
       }
-      
-      // Contar habilidades mencionadas (como proxy para desenvolvimento)
+
       if (avaliacao.habilidade) {
         dadosAgrupados[mesAno].habilidades.push(avaliacao.habilidade);
       }
-      
-      // Contar feedbacks (como proxy para engajamento)
-      if (avaliacao.fedback && avaliacao.fedback.trim().length > 0) {
-        dadosAgrupados[mesAno].feedbacks.push(avaliacao.fedback);
+
+      if (avaliacao.feedback && avaliacao.feedback.trim().length > 0) {
+        dadosAgrupados[mesAno].feedbacks.push(avaliacao.feedback);
       }
-      
+
       dadosAgrupados[mesAno].totalAvaliacoes++;
     });
 
-    // Calcular métricas e retornar array ordenado
     return Object.entries(dadosAgrupados)
       .map(([mesAno, grupo]) => ({
         mes: grupo.mes,
         mesAno: mesAno,
-        notaMedia: grupo.notas.length > 0 
-          ? grupo.notas.reduce((a, b) => a + b, 0) / grupo.notas.length 
-          : 0,
+        notaMedia:
+          grupo.notas.length > 0
+            ? grupo.notas.reduce((a, b) => a + b, 0) / grupo.notas.length
+            : 0,
         habilidadesCount: grupo.habilidades.length,
-        engajamento: grupo.feedbacks.length, // Quantidade de feedbacks como proxy para engajamento
+        engajamento: grupo.feedbacks.length,
         totalAvaliacoes: grupo.totalAvaliacoes,
-        // Criar uma métrica de "desenvolvimento" baseada na variedade de habilidades
-        desenvolvimentoScore: [...new Set(grupo.habilidades)].length * 2, // Habilidades únicas * 2
+        desenvolvimentoScore: [...new Set(grupo.habilidades)].length * 2,
       }))
       .sort((a, b) => new Date(a.mesAno) - new Date(b.mesAno));
   };
 
-  // Buscar lista de jovens para seleção
-  const fetchJovens = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('jovem')
-        .select('id_jovem, nome')
-        .order('nome');
-
-      if (error) throw error;
-      return data || [];
-    } catch (err) {
-      console.error('Erro ao buscar jovens:', err);
-      return [];
-    }
-  };
-
-  useEffect(() => {
-    fetchAvaliacaoData();
-  }, []);
-
-  // Dados de exemplo caso não consiga carregar da API
   const dadosExemplo = [
     { mes: "Jan", notaMedia: 8.5, habilidadesCount: 3, engajamento: 4, desenvolvimentoScore: 6, totalAvaliacoes: 4 },
     { mes: "Fev", notaMedia: 7.8, habilidadesCount: 2, engajamento: 3, desenvolvimentoScore: 4, totalAvaliacoes: 3 },
     { mes: "Mar", notaMedia: 9.2, habilidadesCount: 4, engajamento: 5, desenvolvimentoScore: 8, totalAvaliacoes: 5 },
-    { mes: "Abr", notaMedia: 8.9, habilidadesCount: 3, engajamento: 4, desenvolvimentoScore: 6, totalAvaliacoes: 4 },
-    { mes: "Mai", notaMedia: 9.5, habilidadesCount: 5, engajamento: 6, desenvolvimentoScore: 10, totalAvaliacoes: 6 },
-    { mes: "Jun", notaMedia: 8.7, habilidadesCount: 3, engajamento: 4, desenvolvimentoScore: 6, totalAvaliacoes: 4 },
   ];
 
   const dados = avaliacaoData.length > 0 ? avaliacaoData : dadosExemplo;
-  
-  // Calcular estatísticas gerais
+
   const estatisticas = {
-    notaMediaGeral: dados.length > 0 ? dados.reduce((acc, item) => acc + item.notaMedia, 0) / dados.length : 0,
+    notaMediaGeral: dados.reduce((acc, item) => acc + item.notaMedia, 0) / dados.length,
     totalHabilidades: dados.reduce((acc, item) => acc + item.habilidadesCount, 0),
     engajamentoTotal: dados.reduce((acc, item) => acc + item.engajamento, 0),
     totalAvaliacoesGeral: dados.reduce((acc, item) => acc + item.totalAvaliacoes, 0),
-    desenvolvimentoMedio: dados.length > 0 ? dados.reduce((acc, item) => acc + item.desenvolvimentoScore, 0) / dados.length : 0
+    desenvolvimentoMedio: dados.reduce((acc, item) => acc + item.desenvolvimentoScore, 0) / dados.length,
   };
 
   if (loading) {
@@ -218,154 +170,118 @@ export default function Dashboard() {
               )}
             </div>
 
-            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+            {/* Carousel para os cards */}
+            <Carousel
+              opts={{ align: "start", loop: true }}
+              className="mb-6"
+            >
+              <CarouselContent>
+                <CarouselItem className="md:basis-1/2 lg:basis-1/3">
+                  <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm text-center p-4">
+                    <CardHeader>
+                      <CardTitle className="text-xl text-gray-800">Nota Global</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold text-blue-600">
+                        {estatisticas.notaMediaGeral.toFixed(2)}
+                      </p>
+                      <CardDescription>média geral das avaliações</CardDescription>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+
+                <CarouselItem className="md:basis-1/2 lg:basis-1/3">
+                  <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm text-center p-4">
+                    <CardHeader>
+                      <CardTitle className="text-xl text-gray-800">Média Mensal</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold text-green-600">
+                        {dados.length > 0
+                          ? dados[dados.length - 1].notaMedia.toFixed(2)
+                          : "0.00"}
+                      </p>
+                      <CardDescription>nota do mês mais recente</CardDescription>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+
+                <CarouselItem className="md:basis-1/2 lg:basis-1/3">
+                  <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm text-center p-4">
+                    <CardHeader>
+                      <CardTitle className="text-xl text-gray-800">Feedbacks</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold text-yellow-600">
+                        {estatisticas.engajamentoTotal}
+                      </p>
+                      <CardDescription>total de feedbacks recebidos</CardDescription>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+
+                <CarouselItem className="md:basis-1/2 lg:basis-1/3">
+                  <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm text-center p-4">
+                    <CardHeader>
+                      <CardTitle className="text-xl text-gray-800">Notas do Mês</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {dados.length > 0 ? (
+                        dados.map((item) => (
+                          <div key={item.mesAno} className="mb-2">
+                            <strong>{item.mes}:</strong> {item.notaMedia.toFixed(2)}
+                          </div>
+                        ))
+                      ) : (
+                        <p>Nenhuma nota disponível</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              </CarouselContent>
+
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+
+            {/* Gráfico de linha apenas com nota média */}
+            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm p-4">
               <CardHeader>
-                <CardTitle className="text-2xl text-gray-800">
-                  Evolução do Desempenho
-                </CardTitle>
-                <CardDescription className="text-gray-600">
-                  Gráfico de linha mostrando a evolução das notas, habilidades e engajamento
-                </CardDescription>
+                <CardTitle className="text-lg text-gray-900">Evolução da Nota Média</CardTitle>
+                <CardDescription>Visualização mensal da nota média</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="h-96">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={dados}
-                      margin={{
-                        top: 20,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                      <XAxis
-                        dataKey="mes"
-                        tick={{ fill: "#374151", fontSize: 12 }}
-                        axisLine={{ stroke: "#9ca3af" }}
-                      />
-                      <YAxis
-                        tick={{ fill: "#374151", fontSize: 12 }}
-                        axisLine={{ stroke: "#9ca3af" }}
-                        domain={[0, 'dataMax']}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "white",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "8px",
-                          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                        }}
-                        labelStyle={{ color: "#374151", fontWeight: "bold" }}
-                        formatter={(value, name) => [
-                          typeof value === 'number' ? value.toFixed(1) : value,
-                          name === 'notaMedia' ? 'Nota Média' :
-                          name === 'habilidadesCount' ? 'Habilidades Trabalhadas' :
-                          name === 'engajamento' ? 'Engajamento (Feedbacks)' :
-                          name === 'desenvolvimentoScore' ? 'Score de Desenvolvimento' : name
-                        ]}
-                      />
-                      <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                      <Line
-                        type="monotone"
-                        dataKey="notaMedia"
-                        stroke="#3b82f6"
-                        name="Nota Média"
-                        strokeWidth={3}
-                        dot={{ fill: "#3b82f6", strokeWidth: 2, r: 6 }}
-                        activeDot={{ r: 8, stroke: "#3b82f6", strokeWidth: 2 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="desenvolvimentoScore"
-                        stroke="#10b981"
-                        name="Score de Desenvolvimento"
-                        strokeWidth={3}
-                        dot={{ fill: "#10b981", strokeWidth: 2, r: 6 }}
-                        activeDot={{ r: 8, stroke: "#10b981", strokeWidth: 2 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="engajamento"
-                        stroke="#f59e0b"
-                        name="Engajamento"
-                        strokeWidth={3}
-                        dot={{ fill: "#f59e0b", strokeWidth: 2, r: 6 }}
-                        activeDot={{ r: 8, stroke: "#f59e0b", strokeWidth: 2 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="habilidadesCount"
-                        stroke="#8b5cf6"
-                        name="Habilidades Trabalhadas"
-                        strokeWidth={3}
-                        dot={{ fill: "#8b5cf6", strokeWidth: 2, r: 6 }}
-                        activeDot={{ r: 8, stroke: "#8b5cf6", strokeWidth: 2 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+              <CardContent style={{ height: 320 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                  
+                    data={dados}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                      dataKey="mes"
+                      tick={{ fill: "#374151", fontSize: 12 }}
+                      axisLine={{ stroke: "#9ca3af" }}
+                      tickFormatter={(value) => value.slice(0, 3)}
+                    />
+                    <YAxis
+                      tick={{ fill: "#374151", fontSize: 12 }}
+                      axisLine={{ stroke: "#9ca3af" }}
+                      domain={[0, 10]}
+                    />
+                    <Tooltip />
+                    <Legend />
+                    <Line
+                     type="linear"
+                      dataKey="notaMedia"
+                      stroke="#3b82f6"
+                      name="Nota Média"
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg text-gray-800">
-                    Nota Média Geral
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-blue-600">
-                    {estatisticas.notaMediaGeral.toFixed(1)}
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">De 0 a 10</p>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg text-gray-800">
-                    Habilidades Trabalhadas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-purple-600">
-                    {estatisticas.totalHabilidades}
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">Total no período</p>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg text-gray-800">
-                    Engajamento Total
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-amber-600">
-                    {estatisticas.engajamentoTotal}
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">Feedbacks recebidos</p>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg text-gray-800">
-                    Total de Avaliações
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-green-600">
-                    {estatisticas.totalAvaliacoesGeral}
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">Registros no período</p>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         </main>
       </div>
