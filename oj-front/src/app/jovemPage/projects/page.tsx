@@ -4,28 +4,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Header from "@/components/Header";
 import AppSidebar from "@/components/Sidebar";
-import { User, Building2, BookOpen, CheckCircle } from "lucide-react";
+import {
+  User,
+  Building2,
+  BookOpen,
+  CheckCircle,
+} from "lucide-react";
 
 // Interfaces para tipagem
-
-type Projeto = {
-  id_projeto: number;
-  nome_projeto: string;
-  descricao: string;
-  avaliacao_jovem: number;
-  empresa: {
-    id_empresa: number;
-    nome_empresa: string;
-    email_empresa: string;
-    cnpj: string;
-  };
-  tutor: {
-    id_tutor: number;
-    nome_tutor: string;
-    email_tutor: string;
-  };
-};
-
 interface Empresa {
   id_empresa: number;
   nome_empresa: string;
@@ -60,8 +46,6 @@ export default function ProjetosJovem() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [usuario, setUsuario] = useState<UsuarioJovem | null>(null);
-  const projetos: Projeto[] = data;
-
 
   useEffect(() => {
     inicializarDados();
@@ -139,21 +123,27 @@ export default function ProjetosJovem() {
 
       // Se o jovem tem um projeto atual
       if (jovemData?.id_projeto && jovemData.projeto) {
-        const projeto = jovemData.projeto;
+        const projeto = Array.isArray(jovemData.projeto) 
+          ? jovemData.projeto[0] 
+          : jovemData.projeto;
 
-        setProjetoAtual({
-          id_projeto: projeto.id_projeto,
-          nome_projeto: projeto.nome_projeto,
-          descricao: projeto.descricao,
-          avaliacao_jovem: projeto.avaliacao_jovem,
-          empresa: Array.isArray(projeto.empresa)
-            ? projeto.empresa[0]
-            : projeto.empresa,
-          tutor:
-            Array.isArray(projeto.tutor) && projeto.tutor.length > 0
-              ? projeto.tutor[0]
-              : null,
-        });
+        if (projeto) {
+          setProjetoAtual({
+            id_projeto: projeto.id_projeto,
+            nome_projeto: projeto.nome_projeto,
+            descricao: projeto.descricao,
+            avaliacao_jovem: projeto.avaliacao_jovem,
+            empresa: Array.isArray(projeto.empresa)
+              ? projeto.empresa[0]
+              : projeto.empresa,
+            tutor:
+              Array.isArray(projeto.tutor) && projeto.tutor.length > 0
+                ? projeto.tutor[0]
+                : null,
+          });
+        } else {
+          setProjetoAtual(null);
+        }
       } else {
         // Jovem não tem projeto atual
         setProjetoAtual(null);
@@ -209,7 +199,7 @@ export default function ProjetosJovem() {
       <Header />
       <main className="flex">
         <AppSidebar />
-        <section className="mt-10 flex-1 px-6 py-10">
+        <section className="flex-1 px-6 py-10">
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Meu Projeto</h1>
             {usuario && (
