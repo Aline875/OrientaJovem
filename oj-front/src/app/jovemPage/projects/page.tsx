@@ -199,7 +199,7 @@ export default function ProjetosJovem() {
       <Header />
       <main className="flex">
         <AppSidebar />
-        <section className="flex-1 px-6 py-10">
+        <section className="mt-10 flex-1 px-6 py-10">
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Meu Projeto</h1>
             {usuario && (
