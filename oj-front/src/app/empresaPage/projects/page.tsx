@@ -37,31 +37,37 @@ export default function ListaProjetos() {
 
       const { data, error: supabaseError } = await supabase
         .from("projeto")
-        .select(`
+        .select(
+          `
           id_projeto,
           nome_projeto,
           tutor:id_tutor (
             id_tutor,
             nome_tutor
           )
-        `)
+        `
+        )
         .eq("id_empresa", usuario.id);
 
       if (supabaseError) throw supabaseError;
 
-      const projetosFormatados: Projeto[] = (data ?? []).map((item: {
-        id_projeto: number;
-        nome_projeto: string;
-        tutor: Tutor | Tutor[] | null;
-      }) => ({
-        id_projeto: item.id_projeto,
-        nome_projeto: item.nome_projeto,
-        tutor: Array.isArray(item.tutor) ? item.tutor[0] : item.tutor,
-      }));
+      const projetosFormatados: Projeto[] = (data ?? []).map(
+        (item: {
+          id_projeto: number;
+          nome_projeto: string;
+          tutor: Tutor | Tutor[] | null;
+        }) => ({
+          id_projeto: item.id_projeto,
+          nome_projeto: item.nome_projeto,
+          tutor: Array.isArray(item.tutor) ? item.tutor[0] : item.tutor,
+        })
+      );
 
       setProjetos(projetosFormatados);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao carregar projetos.");
+      setError(
+        err instanceof Error ? err.message : "Erro ao carregar projetos."
+      );
     } finally {
       setLoading(false);
     }
@@ -83,12 +89,11 @@ export default function ListaProjetos() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {projetos.map((projeto) => (
-             <Link
-                key={projeto.id_projeto}
-                href={`/empresaPage/projects/${projeto.id_projeto}`}
-                className="bg-white text-black p-6 rounded-lg shadow hover:bg-gray-100 transition block"
-              >
-
+                <Link
+                  key={projeto.id_projeto}
+                  href={`/empresaPage/projects/${projeto.id_projeto}`}
+                  className="bg-white text-black p-6 rounded-lg shadow hover:bg-gray-100 transition block"
+                >
                   <h2 className="font-semibold text-xl mb-1">
                     {projeto.nome_projeto}
                   </h2>

@@ -79,7 +79,7 @@ export default function ProjetoDetalhes() {
             onClick={() => router.back()}
             className="mb-4 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition"
           >
-<ArrowLeft/>
+            <ArrowLeft />
           </button>
 
           {loading ? (

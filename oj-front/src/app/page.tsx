@@ -7,8 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
@@ -120,15 +123,25 @@ export default function Login() {
               <Label htmlFor="senha" className="block mb-1 text-sm font-medium">
                 Senha
               </Label>
-              <Input
-                id="senha"
-                name="senha"
-                type="password"
-                value={formData.senha}
-                onChange={handleInputChange}
-                placeholder="********"
-                className="w-full px-3 py-2 rounded-md bg-[#D9D9D9] text-black placeholder:text-gray-700 shadow-md"
-              />
+              <div className="relative">
+                <Input
+                  id="senha"
+                  name="senha"
+                  type={mostrarSenha ? "text" : "password"}
+                  value={formData.senha}
+                  onChange={handleInputChange}
+                  placeholder="********"
+                  className="w-full px-3 py-2 pr-10 rounded-md bg-[#D9D9D9] text-black placeholder:text-gray-700 shadow-md"
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarSenha((prev) => !prev)}
+                  className="absolute inset-y-0 right-3 flex items-center text-black"
+                  tabIndex={-1}
+                >
+                  {mostrarSenha ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
             {mensagemErro && (
