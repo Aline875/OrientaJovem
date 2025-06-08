@@ -75,7 +75,7 @@ export function useDadosUsuario() {
   const salvarCacheLocal = useCallback((dados: DadosUsuario) => {
     const cacheData = {
       usuario: dados,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     localStorage.setItem("cache_usuario_dados", JSON.stringify(cacheData));
   }, []);
@@ -116,11 +116,13 @@ export function useDadosUsuario() {
       if (sessao.tipo === "jovem") {
         const { data, error } = await supabase
           .from("jovem")
-          .select(`
+          .select(
+            `
             *,
             projeto:id_projeto(nome_projeto),
             tutor:id_tutor(nome_tutor)
-          `)
+          `
+          )
           .eq("id_jovem", sessao.id)
           .single();
 
@@ -141,7 +143,6 @@ export function useDadosUsuario() {
 
       setUsuario(dadosUsuario);
       salvarCacheLocal(dadosUsuario);
-
     } catch (err: unknown) {
       setErro(err instanceof Error ? err.message : "Erro desconhecido.");
     } finally {

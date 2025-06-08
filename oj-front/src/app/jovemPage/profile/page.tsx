@@ -22,33 +22,41 @@ type DadosJovem = {
 
 // Função auxiliar para extrair dados independente da estrutura
 function extrairDadosUsuario(usuario: unknown): DadosJovem | null {
-  if (!usuario || typeof usuario !== 'object') {
+  if (!usuario || typeof usuario !== "object") {
     return null;
   }
 
   const usuarioObj = usuario as Record<string, unknown>;
 
   // Se já tem a estrutura esperada
-  if (usuarioObj.dados && typeof usuarioObj.dados === 'object' && usuarioObj.dados !== null) {
+  if (
+    usuarioObj.dados &&
+    typeof usuarioObj.dados === "object" &&
+    usuarioObj.dados !== null
+  ) {
     const dados = usuarioObj.dados as Record<string, unknown>;
-    if (typeof dados.nome === 'string') {
+    if (typeof dados.nome === "string") {
       return dados as DadosJovem;
     }
   }
-  
+
   // Se os dados estão diretamente no objeto usuario
-  if (typeof usuarioObj.nome === 'string') {
+  if (typeof usuarioObj.nome === "string") {
     return usuarioObj as DadosJovem;
   }
-  
+
   // Se está dentro de outra propriedade
-  if (usuarioObj.user && typeof usuarioObj.user === 'object' && usuarioObj.user !== null) {
+  if (
+    usuarioObj.user &&
+    typeof usuarioObj.user === "object" &&
+    usuarioObj.user !== null
+  ) {
     const user = usuarioObj.user as Record<string, unknown>;
-    if (typeof user.nome === 'string') {
+    if (typeof user.nome === "string") {
       return user as DadosJovem;
     }
   }
-  
+
   return null;
 }
 
@@ -69,7 +77,8 @@ export default function PerfilJovem() {
     console.log("Estrutura do usuario:", usuario);
     return (
       <p className="text-center mt-10 text-yellow-600">
-        Dados do usuário não encontrados. Verifique o console para mais detalhes.
+        Dados do usuário não encontrados. Verifique o console para mais
+        detalhes.
       </p>
     );
   }
@@ -89,12 +98,13 @@ export default function PerfilJovem() {
 
                 <div className="space-y-2">
                   <p className="text-lg">
-                    <span className="font-semibold">Nome</span> - {dados.nome || "Não informado"}
+                    <span className="font-semibold">Nome</span> -{" "}
+                    {dados.nome || "Não informado"}
                   </p>
                   <p className="text-lg">
                     <span className="font-semibold">Tutor</span>
-                    {dados.tutor?.nome_tutor || dados.nome_tutor 
-                      ? ` - ${dados.tutor?.nome_tutor || dados.nome_tutor}` 
+                    {dados.tutor?.nome_tutor || dados.nome_tutor
+                      ? ` - ${dados.tutor?.nome_tutor || dados.nome_tutor}`
                       : " - Nenhum"}
                   </p>
                   <p className="text-lg">

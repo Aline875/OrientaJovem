@@ -13,7 +13,6 @@ interface UsuarioJovem {
   cpf: number;
   nome: string;
   email: string;
-  list_avaliação: string | null;
   id_projeto: number | null;
   id_tutor: number | null;
   id_empresa: number | null;
@@ -124,42 +123,42 @@ export default function Home() {
     }
   }, []);
 
-type UsuarioCache = {
-  dados: unknown;
-};
+  type UsuarioCache = {
+    dados: unknown;
+  };
 
-const lerCacheLocal = useCallback((): DadosUsuario | null => {
-  try {
-    const cacheString = localStorage.getItem("cache_usuario_dados");
-    if (!cacheString) return null;
+  const lerCacheLocal = useCallback((): DadosUsuario | null => {
+    try {
+      const cacheString = localStorage.getItem("cache_usuario_dados");
+      if (!cacheString) return null;
 
-    const cache: { usuario: unknown; timestamp: number } = JSON.parse(cacheString);
-    const agora = Date.now();
+      const cache: { usuario: unknown; timestamp: number } =
+        JSON.parse(cacheString);
+      const agora = Date.now();
 
-    if (agora - cache.timestamp > 5 * 60 * 1000) {
-      localStorage.removeItem("cache_usuario_dados");
+      if (agora - cache.timestamp > 5 * 60 * 1000) {
+        localStorage.removeItem("cache_usuario_dados");
+        return null;
+      }
+
+      if (cache.usuario && typeof cache.usuario === "object") {
+        const userData = cache.usuario as UsuarioCache;
+
+        if (isUsuarioJovem(userData.dados)) {
+          return { tipo: "jovem", dados: userData.dados };
+        }
+
+        if (isUsuarioEmpresa(userData.dados)) {
+          return { tipo: "empresa", dados: userData.dados };
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Erro ao ler cache local:", error);
       return null;
     }
-
-    if (cache.usuario && typeof cache.usuario === "object") {
-      const userData = cache.usuario as UsuarioCache;
-
-      if (isUsuarioJovem(userData.dados)) {
-        return { tipo: "jovem", dados: userData.dados };
-      }
-
-      if (isUsuarioEmpresa(userData.dados)) {
-        return { tipo: "empresa", dados: userData.dados };
-      }
-    }
-
-    return null;
-  } catch (error) {
-    console.error("Erro ao ler cache local:", error);
-    return null;
-  }
-}, []);
-
+  }, []);
 
   const buscarDadosUsuario = useCallback(
     async (forcarAtualizacao = false) => {
@@ -181,14 +180,20 @@ const lerCacheLocal = useCallback((): DadosUsuario | null => {
         }
 
         // Validar dados da sessão - versão mais permissiva
-        if (!sessao.id || (typeof sessao.id !== "number" && isNaN(parseInt(String(sessao.id))))) {
+        if (
+          !sessao.id ||
+          (typeof sessao.id !== "number" && isNaN(parseInt(String(sessao.id))))
+        ) {
           console.error("Sessão inválida:", sessao);
           localStorage.removeItem("usuario_sessao");
           throw new Error("ID de sessão inválido");
         }
 
-        const idValido = typeof sessao.id === "number" ? sessao.id : parseInt(String(sessao.id));
-        
+        const idValido =
+          typeof sessao.id === "number"
+            ? sessao.id
+            : parseInt(String(sessao.id));
+
         if (idValido <= 0) {
           localStorage.removeItem("usuario_sessao");
           throw new Error("ID de sessão deve ser maior que zero");
@@ -213,14 +218,17 @@ const lerCacheLocal = useCallback((): DadosUsuario | null => {
           }
         }
 
-        console.log("Buscando dados para:", { tipo: sessao.tipo, id: idValido });
+        console.log("Buscando dados para:", {
+          tipo: sessao.tipo,
+          id: idValido,
+        });
 
         // Buscar dados do banco
         if (sessao.tipo === "jovem") {
           const { data, error } = await supabase
             .from("jovem")
             .select(
-              "id_jovem, login, cpf, nome, email, list_avaliação, id_projeto, id_tutor, id_empresa"
+              "id_jovem, login, cpf, nome, email, id_projeto, id_tutor, id_empresa"
             )
             .eq("id_jovem", idValido)
             .single();
@@ -242,7 +250,6 @@ const lerCacheLocal = useCallback((): DadosUsuario | null => {
           const dadosUsuario: DadosUsuario = { tipo: "jovem", dados: data };
           setUsuario(dadosUsuario);
           salvarCacheLocal(dadosUsuario);
-
         } else if (sessao.tipo === "empresa") {
           const { data, error } = await supabase
             .from("empresa")
@@ -252,7 +259,9 @@ const lerCacheLocal = useCallback((): DadosUsuario | null => {
 
           if (error) {
             console.error("Erro do Supabase (empresa):", error);
-            throw new Error(`Erro ao buscar dados da empresa: ${error.message}`);
+            throw new Error(
+              `Erro ao buscar dados da empresa: ${error.message}`
+            );
           }
 
           if (!data) {
@@ -269,20 +278,23 @@ const lerCacheLocal = useCallback((): DadosUsuario | null => {
           const dadosUsuario: DadosUsuario = { tipo: "empresa", dados: data };
           setUsuario(dadosUsuario);
           salvarCacheLocal(dadosUsuario);
-
         } else {
           throw new Error("Tipo de usuário inválido na sessão.");
         }
 
         setUltimaAtualizacao(Date.now());
-
       } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : "Erro desconhecido";
+        const msg =
+          error instanceof Error ? error.message : "Erro desconhecido";
         console.error("Erro em buscarDadosUsuario:", msg);
         setErro(msg);
-        
+
         // Se erro for de autenticação, limpar dados e redirecionar
-        if (msg.includes("logado") || msg.includes("sessão") || msg.includes("Sessão")) {
+        if (
+          msg.includes("logado") ||
+          msg.includes("sessão") ||
+          msg.includes("Sessão")
+        ) {
           localStorage.clear();
           router.push("/");
         }
@@ -361,7 +373,7 @@ const lerCacheLocal = useCallback((): DadosUsuario | null => {
           {
             title: "Publicar Vagas",
             text: "Crie e gerencie oportunidades para jovens.",
-            link: "/empresaPage/Projects",
+            link: "/empresaPage/projects",
           },
           {
             title: "Candidatos",
@@ -389,7 +401,7 @@ const lerCacheLocal = useCallback((): DadosUsuario | null => {
 
   const obterNomeUsuario = useCallback(() => {
     if (!usuario) return "Usuário";
-    
+
     if (usuario.tipo === "jovem") {
       const jovem = usuario.dados as UsuarioJovem;
       return jovem.nome || "Jovem";
@@ -436,13 +448,13 @@ const lerCacheLocal = useCallback((): DadosUsuario | null => {
             ))}
           </CardContent>
         </Card>
-        
+
         {statusCache && (
           <p className={`text-sm mt-2 ${statusCache.cor}`}>
             {statusCache.texto}
           </p>
         )}
-        
+
         {erro && (
           <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 max-w-md text-center">
             <p className="text-red-300 text-sm mb-2">{erro}</p>
