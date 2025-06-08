@@ -349,8 +349,8 @@ export default function Home() {
             link: "/jovemPage/profile",
           },
           {
-            title: "Oportunidades",
-            text: "Descubra vagas e projetos disponíveis.",
+            title: "Projetos",
+            text: "Visualize os seus projetos",
             link: "/jovemPage/projects",
           },
           {
