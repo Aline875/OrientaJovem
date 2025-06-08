@@ -338,11 +338,6 @@ export default function Home() {
           text: "Ainda não tem conta? Cadastre-se aqui.",
           link: "/cadastro",
         },
-        {
-          title: "Sobre",
-          text: "Conheça mais sobre nossa plataforma.",
-          link: "/sobre",
-        },
       ];
     }
 
@@ -371,13 +366,13 @@ export default function Home() {
             link: "/empresaPage/profile",
           },
           {
-            title: "Publicar Vagas",
+            title: "Projetos",
             text: "Crie e gerencie oportunidades para jovens.",
             link: "/empresaPage/projects",
           },
           {
             title: "Candidatos",
-            text: "Visualize e avalie candidatos às suas vagas.",
+            text: "Visualize e avalie os seus candidatos.",
             link: "/empresaPage/dashboard",
           },
         ];
@@ -423,8 +418,8 @@ export default function Home() {
                 : erro
                   ? "❌ Erro ao carregar dados"
                   : usuario
-                    ? `👋 Olá, ${obterNomeUsuario()}!`
-                    : "👋 Bem-vindo!"}
+                    ? `Olá, ${obterNomeUsuario()}!`
+                    : "Bem-vindo!"}
             </CardTitle>
             {usuario && (
               <button

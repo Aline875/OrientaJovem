@@ -46,18 +46,18 @@ export default function PerfilEmpresa() {
 
   if (carregando)
     return (
-      <p className="text-center mt-10 text-gray-600">Carregando dados...</p>
+      <p className="text-center mt-10 text-blue-200">Carregando dados...</p>
     );
 
   if (erro)
-    return <p className="text-center mt-10 text-red-500">Erro: {erro}</p>;
+    return <p className="text-center mt-10 text-red-400">Erro: {erro}</p>;
 
   const dados = extrairDadosEmpresa(usuario);
 
   if (!dados || !dados.nome_empresa) {
     console.log("Estrutura do usuário:", usuario);
     return (
-      <p className="text-center mt-10 text-yellow-600">
+      <p className="text-center mt-10 text-yellow-400">
         Dados da empresa não encontrados. Verifique o console para mais
         detalhes.
       </p>
@@ -69,20 +69,20 @@ export default function PerfilEmpresa() {
       <Header />
       <div className="flex flex-1">
         <AppSidebar />
-        <main className="flex-1 px-6 py-10 text-white mt-18">
+        <main className="flex-1 px-6 py-10 text-blue-200 mt-18">
           <div className="max-w-5xl mx-auto space-y-6">
             {/* Card principal */}
-            <Card className="rounded-3xl bg-[#64748b]/30 backdrop-blur-md p-6 shadow-lg">
+            <Card className="rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20 p-6 shadow-lg">
               <div className="flex flex-col md:flex-row items-center gap-6">
-                <div className="w-32 h-32 rounded-full border-4 border-white flex items-center justify-center text-4xl font-bold bg-white text-gray-800">
+                <div className="w-32 h-32 rounded-full border-4 border-white/30 flex items-center justify-center text-4xl font-bold bg-white/20 backdrop-blur-sm text-blue-200">
                   {dados.nome_empresa?.charAt(0).toUpperCase() || "?"}
                 </div>
                 <div className="space-y-2">
-                  <p className="text-lg">
+                  <p className="text-lg text-blue-200">
                     <span className="font-semibold">Empresa</span> -{" "}
                     {dados.nome_empresa || "Não informado"}
                   </p>
-                  <p className="text-lg">
+                  <p className="text-lg text-blue-200">
                     <span className="font-semibold">CNPJ</span> -{" "}
                     {dados.cnpj || "Não informado"}
                   </p>
@@ -92,10 +92,10 @@ export default function PerfilEmpresa() {
 
             {/* Redes sociais */}
             <div className="flex items-center gap-4 justify-center">
-              <a href="#" className="text-white hover:text-blue-400 text-xl">
+              <a href="#" className="text-blue-200 hover:text-blue-300 text-xl transition-colors duration-300">
                 <Linkedin />
               </a>
-              <a href="#" className="text-white hover:text-gray-300 text-xl">
+              <a href="#" className="text-blue-200 hover:text-blue-300 text-xl transition-colors duration-300">
                 <Github />
               </a>
             </div>
@@ -105,7 +105,7 @@ export default function PerfilEmpresa() {
               {["Projetos", "Ranking", "Colaboradores"].map((item) => (
                 <button
                   key={item}
-                  className="bg-[#94a3b8]/30 text-white px-4 py-2 rounded-full hover:bg-white hover:text-gray-900 transition"
+                  className="bg-white/10 backdrop-blur-sm border border-white/20 text-blue-200 px-4 py-2 rounded-full hover:bg-white/20 transition-all duration-300"
                 >
                   {item}
                 </button>
@@ -113,11 +113,11 @@ export default function PerfilEmpresa() {
             </div>
 
             {/* Informações adicionais */}
-            <Card className="rounded-3xl bg-[#64748b]/30 backdrop-blur-md p-6 shadow-lg">
-              <h2 className="text-lg font-semibold mb-2">
+            <Card className="rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20 p-6 shadow-lg">
+              <h2 className="text-lg font-semibold mb-2 text-blue-200">
                 Informações de Contato
               </h2>
-              <p>Email Corporativo: {dados.email_empresa || "Não informado"}</p>
+              <p className="text-blue-200">Email Corporativo: {dados.email_empresa || "Não informado"}</p>
             </Card>
           </div>
         </main>

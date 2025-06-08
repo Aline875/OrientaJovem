@@ -25,8 +25,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "@/components/ui/carousel";
 
 // Tipos para o componente
@@ -212,78 +210,75 @@ export default function Dashboard() {
             >
               <CarouselContent>
                 <CarouselItem className="md:basis-1/2 lg:basis-1/3">
-                  <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm text-center p-4">
+                  <Card className="shadow-xl border-0 bg-transparent text-center p-4">
                     <CardHeader>
-                      <CardTitle className="text-xl text-gray-800">Nota Global</CardTitle>
+                      <CardTitle className="text-xl text-white">Nota Global</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-3xl font-bold text-blue-600">
+                      <p className="text-3xl font-bold text-blue-400">
                         {estatisticas.notaMediaGeral.toFixed(2)}
                       </p>
-                      <CardDescription>média geral das avaliações</CardDescription>
+                      <CardDescription className="text-blue-200">média geral das avaliações</CardDescription>
                     </CardContent>
                   </Card>
                 </CarouselItem>
 
                 <CarouselItem className="md:basis-1/2 lg:basis-1/3">
-                  <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm text-center p-4">
+                  <Card className="shadow-xl border-0 bg-transparent text-center p-4">
                     <CardHeader>
-                      <CardTitle className="text-xl text-gray-800">Média Mensal</CardTitle>
+                      <CardTitle className="text-xl text-white">Média Mensal</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-3xl font-bold text-green-600">
+                      <p className="text-3xl font-bold text-green-400">
                         {dados.length > 0
                           ? dados[dados.length - 1].notaMedia.toFixed(2)
                           : "0.00"}
                       </p>
-                      <CardDescription>nota do mês mais recente</CardDescription>
+                      <CardDescription className="text-blue-200">nota do mês mais recente</CardDescription>
                     </CardContent>
                   </Card>
                 </CarouselItem>
 
                 <CarouselItem className="md:basis-1/2 lg:basis-1/3">
-                  <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm text-center p-4">
+                  <Card className="shadow-xl border-0 bg-transparent text-center p-4">
                     <CardHeader>
-                      <CardTitle className="text-xl text-gray-800">Feedbacks</CardTitle>
+                      <CardTitle className="text-xl text-white">Feedbacks</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-3xl font-bold text-yellow-600">
+                      <p className="text-3xl font-bold text-yellow-400">
                         {estatisticas.engajamentoTotal}
                       </p>
-                      <CardDescription>total de feedbacks recebidos</CardDescription>
+                      <CardDescription className="text-blue-200">total de feedbacks recebidos</CardDescription>
                     </CardContent>
                   </Card>
                 </CarouselItem>
 
                 <CarouselItem className="md:basis-1/2 lg:basis-1/3">
-                  <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm text-center p-4">
+                  <Card className="shadow-xl border-0 bg-transparent text-center p-4">
                     <CardHeader>
-                      <CardTitle className="text-xl text-gray-800">Notas do Mês</CardTitle>
+                      <CardTitle className="text-xl text-white">Notas do Mês</CardTitle>
                     </CardHeader>
                     <CardContent>
                       {dados.length > 0 ? (
                         dados.map((item) => (
-                          <div key={item.mesAno} className="mb-2">
+                          <div key={item.mesAno} className="mb-2 text-white">
                             <strong>{item.mes}:</strong> {item.notaMedia.toFixed(2)}
                           </div>
                         ))
                       ) : (
-                        <p>Nenhuma nota disponível</p>
+                        <p className="text-white">Nenhuma nota disponível</p>
                       )}
                     </CardContent>
                   </Card>
                 </CarouselItem>
               </CarouselContent>
-
-              <CarouselPrevious />
-              <CarouselNext />
             </Carousel>
 
             {/* Gráfico de linha apenas com nota média */}
-            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm p-4">
+            <Card className="shadow-xl border-0 bg-transparent text-center p-4">
               <CardHeader>
-                <CardTitle className="text-lg text-gray-900">Evolução da Nota Média</CardTitle>
-                <CardDescription>Visualização mensal da nota média</CardDescription>
+                <CardTitle className="text-lg text-white">Evolução da Nota Média</CardTitle>
+                <CardDescription className="text-blue-200">Visualização mensal da nota média</CardDescription>
               </CardHeader>
               <CardContent style={{ height: 320 }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -294,12 +289,12 @@ export default function Dashboard() {
                     <CartesianGrid vertical={false} />
                     <XAxis
                       dataKey="mes"
-                      tick={{ fill: "#374151", fontSize: 12 }}
+                      tick={{ fill: "#e5e7eb", fontSize: 12 }}
                       axisLine={{ stroke: "#9ca3af" }}
                       tickFormatter={(value) => value.slice(0, 3)}
                     />
                     <YAxis
-                      tick={{ fill: "#374151", fontSize: 12 }}
+                      tick={{ fill: "#e5e7eb", fontSize: 12 }}
                       axisLine={{ stroke: "#9ca3af" }}
                       domain={[0, 10]}
                     />
