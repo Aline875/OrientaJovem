@@ -9,7 +9,7 @@ import { ArrowLeft } from "lucide-react";
 
 type Tutor = {
   nome_tutor: string;
-  email: string;
+  email_tutor: string;
 };
 
 type Projeto = {
@@ -45,7 +45,7 @@ export default function ProjetoDetalhes() {
           list_jovem,
           tutor:id_tutor (
             nome_tutor,
-            email
+            email_tutor
           )
         `
         )
@@ -95,7 +95,7 @@ export default function ProjetoDetalhes() {
               <p>
                 <strong>Tutor:</strong>{" "}
                 {projeto.tutor?.nome_tutor || "Não definido"} (
-                {projeto.tutor?.email || "sem email"})
+                {projeto.tutor?.email_tutor || "sem email"})
               </p>
               <p>
                 <strong>Avaliação do Jovem:</strong>{" "}

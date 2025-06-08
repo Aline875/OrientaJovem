@@ -13,7 +13,6 @@ interface UsuarioJovem {
   cpf: number;
   nome: string;
   email: string;
-  list_avaliação: string | null;
   id_projeto: number | null;
   id_tutor: number | null;
   id_empresa: number | null;
@@ -229,7 +228,7 @@ export default function Home() {
           const { data, error } = await supabase
             .from("jovem")
             .select(
-              "id_jovem, login, cpf, nome, email, list_avaliação, id_projeto, id_tutor, id_empresa"
+              "id_jovem, login, cpf, nome, email, id_projeto, id_tutor, id_empresa"
             )
             .eq("id_jovem", idValido)
             .single();
