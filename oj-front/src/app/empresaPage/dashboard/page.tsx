@@ -32,9 +32,7 @@ import {
 import {
   Carousel,
   CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
+  CarouselItem
 } from "@/components/ui/carousel";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
@@ -564,45 +562,45 @@ export default function Dashboard() {
               <Carousel opts={{ align: "start", loop: true }} className="mb-6">
                 <CarouselContent>
                   <CarouselItem className="md:basis-1/2 lg:basis-1/3">
-                    <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm text-center p-4">
+                    <Card className="shadow-xl border-0 bg-white/10 backdrop-blur-sm text-center p-4">
                       <CardHeader>
-                        <CardTitle className="text-xl text-gray-800">Desenvolvimento</CardTitle>
+                        <CardTitle className="text-xl text-blue-200">Desenvolvimento</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-3xl font-bold text-purple-600">
+                        <p className="text-3xl font-bold text-blue-200">
                           {estatisticas.desenvolvimentoMedio.toFixed(1)}
                         </p>
-                        <CardDescription>score de desenvolvimento médio</CardDescription>
+                        <CardDescription className="text-blue-200">score de desenvolvimento médio</CardDescription>
                       </CardContent>
                     </Card>
                   </CarouselItem>
 
                   <CarouselItem className="md:basis-1/2 lg:basis-1/3">
-                    <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm text-center p-4">
+                    <Card className="shadow-xl border-0 bg-white/10 backdrop-blur-sm text-center p-4">
                       <CardHeader>
-                        <CardTitle className="text-xl text-gray-800">Habilidades</CardTitle>
+                        <CardTitle className="text-xl text-blue-200">Habilidades</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-3xl font-bold text-orange-600">
+                        <p className="text-3xl font-bold text-blue-200">
                           {estatisticas.totalHabilidades}
                         </p>
-                        <CardDescription>habilidades desenvolvidas</CardDescription>
+                        <CardDescription className="text-blue-200">habilidades desenvolvidas</CardDescription>
                       </CardContent>
                     </Card>
                   </CarouselItem>
 
                   <CarouselItem className="md:basis-1/2 lg:basis-1/3">
-                    <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm text-center p-4">
+                    <Card className="shadow-xl border-0 bg-white/10 backdrop-blur-sm text-center p-4">
                       <CardHeader>
-                        <CardTitle className="text-xl text-gray-800">Notas por Mês</CardTitle>
+                        <CardTitle className="text-xl text-blue-200">Notas por Mês</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-1 max-h-32 overflow-y-auto">
                           {dados.length > 0 ? (
                             dados.map((item) => (
                               <div key={item.mesAno} className="flex justify-between text-sm">
-                                <strong>{item.mes}:</strong> 
-                                <span className="text-blue-600">{item.notaMedia.toFixed(2)}</span>
+                                <strong className="text-blue-200">{item.mes}:</strong> 
+                                <span className="text-blue-200">{item.notaMedia.toFixed(2)}</span>
                               </div>
                             ))
                           ) : (
@@ -613,8 +611,6 @@ export default function Dashboard() {
                     </Card>
                   </CarouselItem>
                 </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
               </Carousel>
             )}
 
@@ -622,10 +618,10 @@ export default function Dashboard() {
             {jovemSelecionado && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Gráfico de Evolução da Nota */}
-                <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm p-4">
+                <Card className="shadow-xl border-0 bg-white/10 backdrop-blur-sm p-4">
                   <CardHeader>
-                    <CardTitle className="text-lg text-gray-900">Evolução da Nota Média</CardTitle>
-                    <CardDescription>Visualização mensal da nota média</CardDescription>
+                    <CardTitle className="text-lg text-blue-200">Evolução da Nota Média</CardTitle>
+                    <CardDescription className="text-blue-200">Visualização mensal da nota média</CardDescription>
                   </CardHeader>
                   <CardContent style={{ height: 320 }}>
                     <ResponsiveContainer width="100%" height="100%">
@@ -656,7 +652,7 @@ export default function Dashboard() {
                         <Line
                           type="linear"
                           dataKey="notaMedia"
-                          stroke="#3b82f6"
+                          stroke="#6b9dee"
                           name="Nota Média"
                           strokeWidth={3}
                           dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
@@ -667,10 +663,10 @@ export default function Dashboard() {
                 </Card>
 
                 {/* Gráfico de Engajamento */}
-                <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm p-4">
+                <Card className="shadow-xl border-0 bg-white/10 backdrop-blur-sm p-4">
                   <CardHeader>
-                    <CardTitle className="text-lg text-gray-900">Engajamento e Desenvolvimento</CardTitle>
-                    <CardDescription>Feedbacks e score de desenvolvimento mensal</CardDescription>
+                    <CardTitle className="text-lg text-blue-200">Engajamento e Desenvolvimento</CardTitle>
+                    <CardDescription className="text-blue-200">Feedbacks e score de desenvolvimento mensal</CardDescription>
                   </CardHeader>
                   <CardContent style={{ height: 320 }}>
                     <ResponsiveContainer width="100%" height="100%">
@@ -705,7 +701,7 @@ export default function Dashboard() {
                         />
                         <Bar 
                           dataKey="desenvolvimentoScore" 
-                          fill="#8b5cf6" 
+                          fill="#6b9dee" 
                           name="Desenvolvimento"
                           radius={[2, 2, 0, 0]}
                         />

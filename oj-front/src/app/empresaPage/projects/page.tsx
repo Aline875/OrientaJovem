@@ -183,63 +183,66 @@ export default function ListaProjetos() {
         <AppSidebar />
         <section className="flex-1 px-6 py-10">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Projetos</h1>
+            <h1 className="text-3xl font-bold text-blue-200">Projetos</h1>
             
             <Dialog open={showForm} onOpenChange={setShowForm}>
               <DialogTrigger asChild>
-                <Button className="bg-green-600 hover:bg-green-700 text-white">
+                <Button className="bg-white/10 backdrop-blur-sm text-blue-200 border border-white/20 hover:bg-white/20 transition-all duration-300">
                   <Plus className="w-4 h-4 mr-2" />
                   Novo Projeto
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-sm border border-white/20 text-blue-200">
                 <DialogHeader>
-                  <DialogTitle>Criar Novo Projeto</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-blue-200">Criar Novo Projeto</DialogTitle>
+                  <DialogDescription className="text-blue-200/80">
                     Preencha as informações do projeto. O nome é obrigatório.
                   </DialogDescription>
                 </DialogHeader>
                 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="nome_projeto">Nome do Projeto *</Label>
+                    <Label htmlFor="nome_projeto" className="text-blue-200">Nome do Projeto *</Label>
                     <Input
                       id="nome_projeto"
                       name="nome_projeto"
                       value={formData.nome_projeto}
                       onChange={handleInputChange}
                       placeholder="Digite o nome do projeto"
+                      className="bg-white/10 backdrop-blur-sm border-white/20 text-blue-200 placeholder:text-blue-200/60"
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="descricao">Descrição</Label>
+                    <Label htmlFor="descricao" className="text-blue-200">Descrição</Label>
                     <Textarea
                       id="descricao"
                       name="descricao"
                       value={formData.descricao}
                       onChange={handleInputChange}
                       placeholder="Descreva o projeto (opcional)"
+                      className="bg-white/10 backdrop-blur-sm border-white/20 text-blue-200 placeholder:text-blue-200/60"
                       rows={3}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="tutor">Tutor</Label>
+                    <Label htmlFor="tutor" className="text-blue-200">Tutor</Label>
                     <div className="flex gap-2">
                       <Select 
                         value={formData.id_tutor || undefined} 
                         onValueChange={handleSelectChange}
                       >
-                        <SelectTrigger className="flex-1">
+                        <SelectTrigger className="flex-1 bg-white/10 backdrop-blur-sm border-white/20 text-blue-200">
                           <SelectValue placeholder="Selecione um tutor (opcional)" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white/10 backdrop-blur-sm border-white/20">
                           {tutores.map((tutor) => (
                             <SelectItem 
                               key={tutor.id_tutor} 
                               value={tutor.id_tutor.toString()}
+                              className="text-blue-200 hover:bg-white/20"
                             >
                               {tutor.nome_tutor}
                             </SelectItem>
@@ -252,6 +255,7 @@ export default function ListaProjetos() {
                           variant="outline"
                           size="sm"
                           onClick={() => setFormData(prev => ({ ...prev, id_tutor: "" }))}
+                          className="bg-white/10 backdrop-blur-sm border-white/20 text-blue-200 hover:bg-white/20"
                         >
                           Limpar
                         </Button>
@@ -263,7 +267,7 @@ export default function ListaProjetos() {
                     <Button
                       type="submit"
                       disabled={submitting}
-                      className="flex-1"
+                      className="flex-1 bg-white/10 backdrop-blur-sm border border-white/20 text-blue-200 hover:bg-white/20 transition-all duration-300"
                     >
                       {submitting ? "Criando..." : "Criar Projeto"}
                     </Button>
@@ -271,7 +275,7 @@ export default function ListaProjetos() {
                       type="button"
                       variant="outline"
                       onClick={() => setShowForm(false)}
-                      className="flex-1"
+                      className="flex-1 bg-white/10 backdrop-blur-sm border-white/20 text-blue-200 hover:bg-white/20"
                     >
                       Cancelar
                     </Button>
@@ -282,23 +286,23 @@ export default function ListaProjetos() {
           </div>
 
           {loading ? (
-            <p>Carregando...</p>
+            <p className="text-blue-200">Carregando...</p>
           ) : error ? (
-            <p className="text-red-500">{error}</p>
+            <p className="text-red-400">{error}</p>
           ) : projetos.length === 0 ? (
-            <p>Nenhum projeto encontrado.</p>
+            <p className="text-blue-200">Nenhum projeto encontrado.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {projetos.map((projeto) => (
                 <Link
                   key={projeto.id_projeto}
                   href={`/empresaPage/projects/${projeto.id_projeto}`}
-                  className="bg-white text-black p-6 rounded-lg shadow hover:bg-gray-100 transition block"
+                  className="bg-white/10 backdrop-blur-sm text-blue-200 p-6 rounded-lg border border-white/20 hover:bg-white/20 transition-all duration-300 block"
                 >
-                  <h2 className="font-semibold text-xl mb-1">
+                  <h2 className="font-semibold text-xl mb-1 text-blue-200">
                     {projeto.nome_projeto}
                   </h2>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-blue-200/80">
                     Tutor: {projeto.tutor?.nome_tutor || "Não definido"}
                   </p>
                 </Link>
