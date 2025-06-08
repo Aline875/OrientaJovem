@@ -97,17 +97,17 @@ export default function PerfilJovem() {
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-lg">
+                  <p className="text-lg text-blue-200">
                     <span className="font-semibold">Nome</span> -{" "}
                     {dados.nome || "Não informado"}
                   </p>
-                  <p className="text-lg">
+                  <p className="text-lg text-blue-200">
                     <span className="font-semibold">Tutor</span>
                     {dados.tutor?.nome_tutor || dados.nome_tutor
                       ? ` - ${dados.tutor?.nome_tutor || dados.nome_tutor}`
                       : " - Nenhum"}
                   </p>
-                  <p className="text-lg">
+                  <p className="text-lg text-blue-200">
                     <span className="font-semibold">Projeto atual</span>
                     {dados.projeto?.nome_projeto || dados.nome_projeto
                       ? ` - ${dados.projeto?.nome_projeto || dados.nome_projeto}`
@@ -141,11 +141,11 @@ export default function PerfilJovem() {
 
             {/* Informações do currículo */}
             <Card className="rounded-3xl bg-[#64748b]/30 backdrop-blur-md p-6 shadow-lg">
-              <h2 className="text-lg font-semibold mb-2">
+              <h2 className="text-lg font-semibold mb-2 text-blue-200">
                 Informações do currículo
               </h2>
-              <p>Email: {dados.email || "Não informado"}</p>
-              <p>CPF: {dados.cpf || "Não informado"}</p>
+              <p className="text-blue-200">Email: {dados.email || "Não informado"}</p>
+              <p className="text-blue-200">CPF: {dados.cpf || "Não informado"}</p>
             </Card>
           </div>
         </main>
